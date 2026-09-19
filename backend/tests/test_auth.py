@@ -7,16 +7,41 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-client = TestClient(app)
+
+
+
 
 TEST_SECRET = "test-secret-key-that-is-at-least-32-bytes-long"
 
+client = TestClient(app)
 
-def test_verify_jwt_returns_payload(monkeypatch):
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", TEST_SECRET)
+@pytest.fixture(autouse=True)
+def mock_settings(monkeypatch):
+    monkeypatch.setenv(
+        "SUPABASE_URL",
+        "https://example.supabase.co",
+    )
+    monkeypatch.setenv(
+        "SUPABASE_ANON_KEY",
+        "test-anon-key",
+    )
+    monkeypatch.setenv(
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "test-service-role-key",
+    )
+    monkeypatch.setenv(
+        "SUPABASE_JWT_SECRET",
+        TEST_SECRET,
+    )
 
     get_settings.cache_clear()
 
+    yield
+
+    get_settings.cache_clear()
+
+
+def test_verify_jwt_returns_payload():
     token = jwt.encode(
         {
             "sub": "test-user-id",
@@ -33,11 +58,7 @@ def test_verify_jwt_returns_payload(monkeypatch):
     assert payload["role"] == "authenticated"
 
 
-def test_verify_jwt_rejects_invalid_token(monkeypatch):
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", TEST_SECRET)
-
-    get_settings.cache_clear()
-
+def test_verify_jwt_rejects_invalid_token():
     with pytest.raises(Exception):
         verify_jwt("not-a-valid-jwt")
 
@@ -56,11 +77,7 @@ def test_me_with_invalid_token():
 
     assert response.status_code == 401
 
-def test_me_with_valid_token(monkeypatch):
-    monkeypatch.setenv("SUPABASE_JWT_SECRET", TEST_SECRET)
-
-    get_settings.cache_clear()
-
+def test_me_with_valid_token():
     token = jwt.encode(
         {
             "sub": "test-user-id",
