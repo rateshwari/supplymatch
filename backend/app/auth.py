@@ -7,7 +7,7 @@ from app.config import get_settings
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def verify_jwt(token: str) -> dict[str, Any]:
@@ -37,6 +37,13 @@ def verify_jwt(token: str) -> dict[str, Any]:
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> dict[str, Any]:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication credentials were not provided",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     return verify_jwt(credentials.credentials)
