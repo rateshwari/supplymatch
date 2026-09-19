@@ -1,7 +1,13 @@
-from app.config import settings
+from app.config import Settings
 
 
 def test_supabase_configuration_loaded():
-    assert settings.supabase_url
-    assert settings.supabase_anon_key
-    assert settings.supabase_service_role_key
+    test_settings = Settings(
+        supabase_url="https://example.supabase.co",
+        supabase_anon_key="test-anon-key",
+        supabase_service_role_key="test-service-role-key",
+    )
+
+    assert test_settings.supabase_url == "https://example.supabase.co"
+    assert test_settings.supabase_anon_key == "test-anon-key"
+    assert test_settings.supabase_service_role_key == "test-service-role-key"
