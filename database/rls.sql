@@ -52,11 +52,11 @@ using (true);
 -- Users can read requirements and modify only their own.
 -- ============================================================
 
-create policy "requirements_select"
+create policy "requirements_select_own"
 on requirements
 for select
 to authenticated
-using (true);
+using (auth.uid() = user_id);
 
 create policy "requirements_insert_own"
 on requirements
@@ -83,11 +83,11 @@ using (auth.uid() = user_id);
 -- Users can read offerings and modify only their own.
 -- ============================================================
 
-create policy "offerings_select"
+create policy "offerings_select_own"
 on offerings
 for select
 to authenticated
-using (true);
+using (auth.uid() = user_id);
 
 create policy "offerings_insert_own"
 on offerings
