@@ -52,16 +52,10 @@ def update_my_profile(
             detail="At least one profile field must be provided",
         )
 
-    if any(value is None for value in updates.values()):
+    if "name" in updates and updates["name"] is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Profile fields cannot be null",
-        )
-
-    if not updates:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="At least one profile field must be provided",
+            detail="Profile name cannot be null",
         )
 
     response = (

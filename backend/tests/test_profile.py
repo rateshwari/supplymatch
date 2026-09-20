@@ -254,7 +254,36 @@ def test_update_my_profile_rejects_null_name():
 
         assert response.status_code == 400
         assert response.json() == {
-            "detail": "Profile fields cannot be null"
-        }
+    "detail": "Profile name cannot be null"
+}
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_update_my_profile_allows_null_company():
+    profile = {
+        "id": "user-123",
+        "role": "client",
+        "name": "Test User",
+        "company": None,
+        "created_at": "2026-09-20T00:00:00+00:00",
+    }
+
+    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[get_supabase_client] = (
+        lambda: make_update_supabase_mock(
+            profile,
+            {"company": None},
+        )
+    )
+
+    try:
+        response = client.patch(
+            "/api/v1/profile/me",
+            json={"company": None},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == profile
     finally:
         app.dependency_overrides.clear()
