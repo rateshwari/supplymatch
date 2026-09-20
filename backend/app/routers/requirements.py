@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
-from app.auth import get_current_user
+from app.auth import get_current_user, require_client_user
 from app.deps import get_supabase_client
-from app.schemas.requirement import RequirementCreateRequest
+from app.schemas.requirement import (
+    RequirementCreateRequest,
+    RequirementResponse,
+)
 
 router = APIRouter(
     prefix="/api/v1/requirements",
@@ -11,13 +14,32 @@ router = APIRouter(
 )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=RequirementResponse,
+)
 def create_requirement(
     requirement: RequirementCreateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_client_user),
     supabase: Client = Depends(get_supabase_client),
 ):
     user_id = current_user["sub"]
+
+    category_response = (
+        supabase
+        .table("categories")
+        .select("id")
+        .eq("id", requirement.category_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if not category_response.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Category not found",
+        )
 
     payload = requirement.model_dump()
     payload["user_id"] = user_id
@@ -42,7 +64,11 @@ def create_requirement(
 
     return response.data
 
-@router.get("")
+
+@router.get(
+    "",
+    response_model=list[RequirementResponse],
+)
 def get_my_requirements(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_client),

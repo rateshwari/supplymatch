@@ -1,11 +1,12 @@
 from typing import Any
 
 import jwt
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from supabase import Client
 
 from app.config import get_settings
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from app.deps import get_supabase_client
 
 security = HTTPBearer(auto_error=False)
 
@@ -47,3 +48,33 @@ def get_current_user(
         )
 
     return verify_jwt(credentials.credentials)
+
+
+def require_client_user(
+    current_user: dict[str, Any] = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase_client),
+) -> dict[str, Any]:
+    user_id = current_user["sub"]
+
+    response = (
+        supabase
+        .table("profiles")
+        .select("role")
+        .eq("id", user_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found",
+        )
+
+    if response.data["role"] != "client":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only client accounts can create requirements",
+        )
+
+    return current_user
