@@ -15,7 +15,9 @@ def make_supabase_mock(profile_data):
         def select(self, *_args):
             return self
 
-        def eq(self, *_args):
+        def eq(self, column, value):
+            assert column == "id"
+            assert value == "user-123"
             return self
 
         def maybe_single(self):
