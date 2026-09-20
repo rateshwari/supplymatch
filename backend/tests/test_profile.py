@@ -287,3 +287,12 @@ def test_update_my_profile_allows_null_company():
         assert response.json() == profile
     finally:
         app.dependency_overrides.clear()
+
+
+def test_update_my_profile_requires_authentication():
+    response = client.patch(
+        "/api/v1/profile/me",
+        json={"name": "Updated User"},
+    )
+
+    assert response.status_code == 401
