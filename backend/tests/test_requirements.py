@@ -18,6 +18,10 @@ def override_auth():
     return mock_auth()
 
 
+def override_supabase():
+    return MagicMock()
+
+
 def test_create_requirement_success():
     mock_supabase = MagicMock()
 
@@ -44,7 +48,6 @@ def test_create_requirement_success():
     ) = MagicMock(data=returned_requirement)
 
     app.dependency_overrides[get_current_user] = override_auth
-
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
 
     try:
@@ -100,6 +103,7 @@ def test_create_requirement_requires_authentication():
 
 def test_create_requirement_rejects_user_id_from_request():
     app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[get_supabase_client] = override_supabase
 
     try:
         response = client.post(
@@ -122,6 +126,7 @@ def test_create_requirement_rejects_user_id_from_request():
 
 def test_create_requirement_validates_required_fields():
     app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[get_supabase_client] = override_supabase
 
     try:
         response = client.post(
@@ -143,6 +148,7 @@ def test_create_requirement_validates_required_fields():
 
 def test_create_requirement_rejects_invalid_category_id():
     app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[get_supabase_client] = override_supabase
 
     try:
         response = client.post(
@@ -175,7 +181,6 @@ def test_create_requirement_returns_400_when_insert_fails():
     ) = MagicMock(data=None)
 
     app.dependency_overrides[get_current_user] = override_auth
-
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
 
     try:
