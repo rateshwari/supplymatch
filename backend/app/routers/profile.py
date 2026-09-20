@@ -52,6 +52,18 @@ def update_my_profile(
             detail="At least one profile field must be provided",
         )
 
+    if any(value is None for value in updates.values()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profile fields cannot be null",
+        )
+
+    if not updates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one profile field must be provided",
+        )
+
     response = (
         supabase
         .table("profiles")
