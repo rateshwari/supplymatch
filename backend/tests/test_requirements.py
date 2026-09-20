@@ -386,7 +386,7 @@ def test_get_my_requirements_success():
 
     requirements_table = MagicMock()
 
-    requirements_table.select.return_value.eq.return_value.execute.return_value = (
+    requirements_table.select.return_value.eq.return_value.order.return_value.execute.return_value = (
         MagicMock(data=returned_requirements)
     )
 
@@ -428,7 +428,7 @@ def test_get_my_requirements_returns_empty_list():
 
     requirements_table = MagicMock()
 
-    requirements_table.select.return_value.eq.return_value.execute.return_value = (
+    requirements_table.select.return_value.eq.return_value.order.return_value.execute.return_value = (
         MagicMock(data=[])
     )
 

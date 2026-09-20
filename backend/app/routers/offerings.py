@@ -3,11 +3,11 @@ from supabase import Client
 
 from app.auth import require_supplier_user
 from app.deps import get_supabase_client
-from app.services.embeddings import build_embedding_text, generate_embedding
 from app.schemas.offering import (
     OfferingCreateRequest,
     OfferingResponse,
 )
+from app.services.embeddings import build_embedding_text, generate_embedding
 
 router = APIRouter(
     prefix="/api/v1/offerings",
@@ -28,8 +28,7 @@ def create_offering(
     user_id = current_user["sub"]
 
     category_response = (
-        supabase
-        .table("categories")
+        supabase.table("categories")
         .select("id")
         .eq("id", offering.category_id)
         .maybe_single()
@@ -42,19 +41,19 @@ def create_offering(
             detail="Category not found",
         )
 
-    payload = offering.model_dump()
-
     embedding_text = build_embedding_text(
         offering.product,
         offering.notes,
     )
 
-    payload["embedding"] = generate_embedding(embedding_text)
+    embedding = generate_embedding(embedding_text)
+
+    payload = offering.model_dump()
     payload["user_id"] = user_id
+    payload["embedding"] = embedding
 
     response = (
-        supabase
-        .table("offerings")
+        supabase.table("offerings")
         .insert(payload)
         .select(
             "id, user_id, product, category_id, quantity, "
@@ -84,20 +83,14 @@ def get_my_offerings(
     user_id = current_user["sub"]
 
     response = (
-        supabase
-        .table("offerings")
+        supabase.table("offerings")
         .select(
             "id, user_id, product, category_id, quantity, "
             "price, location, delivery, notes, created_at"
         )
         .eq("user_id", user_id)
+        .order("created_at", desc=True)
         .execute()
     )
 
-    if response.data is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Offerings not found",
-        )
-
-    return response.data
+    return response.data or []

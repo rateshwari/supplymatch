@@ -399,7 +399,7 @@ def test_get_my_offerings_success():
     }
 
     offerings_table = MagicMock()
-    offerings_table.select.return_value.eq.return_value.execute.return_value.data = [
+    offerings_table.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
         {
             "id": "offering-1",
             "user_id": "supplier-user-123",
@@ -450,7 +450,7 @@ def test_get_my_offerings_empty():
     }
 
     offerings_table = MagicMock()
-    offerings_table.select.return_value.eq.return_value.execute.return_value.data = []
+    offerings_table.select.return_value.eq.return_value.order.return_value.execute.return_value.data = []
 
     def table(name):
         if name == "profiles":

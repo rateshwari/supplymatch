@@ -4,6 +4,7 @@ from app.routers.auth import router as auth_router
 from app.routers.profile import router as profile_router
 from app.routers.requirements import router as requirements_router
 from app.routers.offerings import router as offerings_router
+from app.routers import auth, matches, offerings, profile, requirements
 
 app = FastAPI(
     title="SupplyMatch API",
@@ -24,3 +25,4 @@ app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(requirements_router)
 app.include_router(offerings_router)
+app.include_router(matches.router)
