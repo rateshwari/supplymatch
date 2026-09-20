@@ -62,6 +62,35 @@ def test_verify_jwt_rejects_invalid_token():
     with pytest.raises(Exception):
         verify_jwt("not-a-valid-jwt")
 
+def test_verify_jwt_rejects_wrong_signing_key():
+    token = jwt.encode(
+        {
+            "sub": "test-user-id",
+            "role": "authenticated",
+            "aud": "authenticated",
+        },
+        "different-test-signing-key-that-is-at-least-32-bytes",
+        algorithm="HS256",
+    )
+
+    with pytest.raises(Exception):
+        verify_jwt(token)
+
+
+def test_verify_jwt_rejects_non_authenticated_audience():
+    token = jwt.encode(
+        {
+            "sub": "test-user-id",
+            "role": "authenticated",
+            "aud": "wrong-audience",
+        },
+        TEST_SECRET,
+        algorithm="HS256",
+    )
+
+    with pytest.raises(Exception):
+        verify_jwt(token)
+
 
 def test_me_requires_authentication():
     response = client.get("/api/v1/auth/me")
