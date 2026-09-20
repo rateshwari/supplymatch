@@ -46,6 +46,34 @@ def test_generate_requirement_matches_success():
     )
 
     matches_table = MagicMock()
+    notifications_table = MagicMock()
+
+    (
+        notifications_table.select.return_value
+        .eq.return_value
+        .eq.return_value
+        .limit.return_value
+        .execute.return_value
+    ) = MagicMock(data=[])
+
+    (
+        notifications_table.insert.return_value
+        .select.return_value
+        .maybe_single.return_value
+        .execute.return_value
+    ) = MagicMock(
+        data={
+            "id": "notification-1",
+            "user_id": "supplier-1",
+            "match_id": "match-1",
+            "message": (
+                "New requirement match for Business laptops "
+                "with a match score of 97%."
+            ),
+            "read": False,
+            "created_at": "2026-09-20T10:00:00+00:00",
+        }
+    )
 
     persisted_match = {
         "id": "match-1",
@@ -83,6 +111,8 @@ def test_generate_requirement_matches_success():
             return requirements_table
         if name == "matches":
             return matches_table
+        if name == "notifications":
+            return notifications_table
         raise AssertionError(f"Unexpected table: {name}")
 
     supabase.table.side_effect = table

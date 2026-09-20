@@ -5,6 +5,7 @@ from app.auth import require_client_user
 from app.deps import get_supabase_client
 from app.schemas.match import MatchResponse
 from app.services.matching_service import find_requirement_matches
+from app.services.notifications import create_match_notification
 
 router = APIRouter(
     prefix="/api/v1/requirements",
@@ -92,6 +93,13 @@ def generate_requirement_matches(
             )
 
         persisted_matches.append(response.data)
+        create_match_notification(
+            supabase,
+            supplier_user_id=match["supplier_user_id"],
+            match_id=response.data["id"],
+            requirement_product=match["product"],
+            score=match["score"],
+        )
 
     return persisted_matches
 
