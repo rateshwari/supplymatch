@@ -74,3 +74,22 @@ export interface CreateOfferingRequest {
   delivery: string;
   notes?: string | null;
 }
+
+export interface Profile {
+  id: string;
+  role: "client" | "supplier";
+  name: string;
+  company?: string | null;
+  created_at: string;
+}
+
+export interface CreateProfileRequest {
+  role: "client" | "supplier";
+  name: string;
+  company?: string | null;
+}
+
+export interface UpdateProfileRequest {
+  name?: string;
+  company?: string | null;
+}
