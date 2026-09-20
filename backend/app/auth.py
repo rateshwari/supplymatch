@@ -78,3 +78,32 @@ def require_client_user(
         )
 
     return current_user
+
+def require_supplier_user(
+    current_user: dict[str, Any] = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase_client),
+) -> dict[str, Any]:
+    user_id = current_user["sub"]
+
+    response = (
+        supabase
+        .table("profiles")
+        .select("role")
+        .eq("id", user_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found",
+        )
+
+    if response.data["role"] != "supplier":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only supplier accounts can create offerings",
+        )
+
+    return current_user
