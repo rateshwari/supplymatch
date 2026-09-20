@@ -70,7 +70,7 @@ def create_requirement(
     response_model=list[RequirementResponse],
 )
 def get_my_requirements(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_client_user),
     supabase: Client = Depends(get_supabase_client),
 ):
     user_id = current_user["sub"]

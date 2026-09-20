@@ -347,6 +347,11 @@ def test_get_my_requirements_success():
         },
     ]
 
+    profiles_table = MagicMock()
+    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
+        MagicMock(data={"role": "client"})
+    )
+
     requirements_table = MagicMock()
 
     requirements_table.select.return_value.eq.return_value.execute.return_value = (
@@ -354,6 +359,7 @@ def test_get_my_requirements_success():
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
+        "profiles": profiles_table,
         "requirements": requirements_table,
     }[table_name]
 
@@ -394,9 +400,15 @@ def test_get_my_requirements_returns_empty_list():
         MagicMock(data=[])
     )
 
+    profiles_table = MagicMock()
+    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
+        MagicMock(data={"role": "client"})
+    )
+
     mock_supabase.table.side_effect = lambda table_name: {
-        "requirements": requirements_table,
-    }[table_name]
+    "profiles": profiles_table,
+    "requirements": requirements_table,
+}[table_name]
 
     app.dependency_overrides[get_current_user] = override_auth
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
@@ -419,13 +431,20 @@ def test_get_my_requirements_uses_authenticated_user_id():
         MagicMock(data=[])
     )
 
+    profiles_table = MagicMock()
+    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
+        MagicMock(data={"role": "client"})
+    )
+
     mock_supabase.table.side_effect = lambda table_name: {
-        "requirements": requirements_table,
+    "profiles": profiles_table,
+    "requirements": requirements_table,
     }[table_name]
 
-    app.dependency_overrides[get_current_user] = lambda: {
-        "sub": "different-user-456",
-    }
+    app.dependency_overrides[require_client_user] = lambda: {
+    "sub": "different-user-456",
+    "role": "client",
+}
 
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
 
@@ -439,4 +458,29 @@ def test_get_my_requirements_uses_authenticated_user_id():
     requirements_table.select.return_value.eq.assert_called_once_with(
         "user_id",
         "different-user-456",
+    )
+
+def test_supplier_cannot_list_requirements():
+    mock_supabase = MagicMock()
+
+    profiles_table = MagicMock()
+    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
+        MagicMock(data={"role": "supplier"})
+    )
+
+    mock_supabase.table.side_effect = lambda table_name: {
+        "profiles": profiles_table,
+    }[table_name]
+
+    app.dependency_overrides[get_current_user] = override_auth
+    app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
+
+    try:
+        response = client.get("/api/v1/requirements")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == (
+        "Only client accounts can create requirements"
     )
