@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
@@ -66,23 +66,32 @@ def test_create_requirement_success():
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
 
     try:
-        response = client.post(
-            "/api/v1/requirements",
-            json={
-                "product": "100 laptops",
-                "category_id": 1,
-                "quantity": "100",
-                "budget": "₹500000",
-                "location": "Mumbai",
-                "timeline": "30 days",
-                "notes": "Business laptops",
-            },
-        )
+        with patch(
+            "app.routers.requirements.generate_embedding",
+            return_value=[0.01] * 384,
+        ) as mock_generate_embedding:
+            response = client.post(
+                "/api/v1/requirements",
+                json={
+                    "product": "100 laptops",
+                    "category_id": 1,
+                    "quantity": "100",
+                    "budget": "₹500000",
+                    "location": "Mumbai",
+                    "timeline": "30 days",
+                    "notes": "Business laptops",
+                },
+            )
     finally:
         app.dependency_overrides.clear()
 
     assert response.status_code == 201
     assert response.json() == returned_requirement
+
+    # Verify embedding generation.
+    mock_generate_embedding.assert_called_once_with(
+        "100 laptops | Business laptops"
+    )
 
     # Verify application-level role authorization.
     profiles_table.select.assert_called_once_with("role")
@@ -108,6 +117,7 @@ def test_create_requirement_success():
             "location": "Mumbai",
             "timeline": "30 days",
             "notes": "Business laptops",
+            "embedding": [0.01] * 384,
             "user_id": "user-123",
         }
     )
@@ -300,21 +310,43 @@ def test_create_requirement_returns_400_when_insert_fails():
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
 
     try:
-        response = client.post(
-            "/api/v1/requirements",
-            json={
-                "product": "100 laptops",
-                "category_id": 1,
-                "quantity": "100",
-                "budget": "₹500000",
-                "location": "Mumbai",
-                "timeline": "30 days",
-            },
-        )
+        with patch(
+            "app.routers.requirements.generate_embedding",
+            return_value=[0.01] * 384,
+        ) as mock_generate_embedding:
+            response = client.post(
+                "/api/v1/requirements",
+                json={
+                    "product": "100 laptops",
+                    "category_id": 1,
+                    "quantity": "100",
+                    "budget": "₹500000",
+                    "location": "Mumbai",
+                    "timeline": "30 days",
+                },
+            )
     finally:
         app.dependency_overrides.clear()
 
     assert response.status_code == 400
+
+    mock_generate_embedding.assert_called_once_with(
+        "100 laptops"
+    )
+
+    requirements_table.insert.assert_called_once_with(
+        {
+            "product": "100 laptops",
+            "category_id": 1,
+            "quantity": "100",
+            "budget": "₹500000",
+            "location": "Mumbai",
+            "timeline": "30 days",
+            "notes": None,
+            "embedding": [0.01] * 384,
+            "user_id": "user-123",
+        }
+    )
 
 
 def test_get_my_requirements_success():
@@ -354,7 +386,7 @@ def test_get_my_requirements_success():
 
     requirements_table = MagicMock()
 
-    requirements_table.select.return_value.eq.return_value.execute.return_value = (
+    requirements_table.select.return_value.eq.return_value.order.return_value.execute.return_value = (
         MagicMock(data=returned_requirements)
     )
 
@@ -396,7 +428,7 @@ def test_get_my_requirements_returns_empty_list():
 
     requirements_table = MagicMock()
 
-    requirements_table.select.return_value.eq.return_value.execute.return_value = (
+    requirements_table.select.return_value.eq.return_value.order.return_value.execute.return_value = (
         MagicMock(data=[])
     )
 
@@ -406,9 +438,9 @@ def test_get_my_requirements_returns_empty_list():
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
-    "profiles": profiles_table,
-    "requirements": requirements_table,
-}[table_name]
+        "profiles": profiles_table,
+        "requirements": requirements_table,
+    }[table_name]
 
     app.dependency_overrides[get_current_user] = override_auth
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
@@ -437,14 +469,14 @@ def test_get_my_requirements_uses_authenticated_user_id():
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
-    "profiles": profiles_table,
-    "requirements": requirements_table,
+        "profiles": profiles_table,
+        "requirements": requirements_table,
     }[table_name]
 
     app.dependency_overrides[require_client_user] = lambda: {
-    "sub": "different-user-456",
-    "role": "client",
-}
+        "sub": "different-user-456",
+        "role": "client",
+    }
 
     app.dependency_overrides[get_supabase_client] = lambda: mock_supabase
 
@@ -459,6 +491,7 @@ def test_get_my_requirements_uses_authenticated_user_id():
         "user_id",
         "different-user-456",
     )
+
 
 def test_supplier_cannot_list_requirements():
     mock_supabase = MagicMock()

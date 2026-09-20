@@ -2,8 +2,9 @@
 -- SupplyMatch Database Schema
 -- ============================================================
 
--- Enable UUID generation
+-- Enable required PostgreSQL extensions
 create extension if not exists pgcrypto;
+create extension if not exists vector;
 
 -- ============================================================
 -- PROFILES
@@ -78,6 +79,47 @@ create table if not exists offerings (
 create index if not exists offerings_embedding_idx
 on offerings
 using hnsw (embedding vector_cosine_ops);
+
+-- ============================================================
+-- VECTOR SEARCH
+-- Retrieves semantically similar supplier offerings
+-- ============================================================
+
+create or replace function match_offerings(
+    query_embedding vector(384),
+    match_count integer default 20
+)
+returns table (
+    id uuid,
+    user_id uuid,
+    product text,
+    category_id integer,
+    quantity text,
+    price text,
+    location text,
+    delivery text,
+    notes text,
+    similarity double precision
+)
+language sql
+stable
+as $$
+    select
+        o.id,
+        o.user_id,
+        o.product,
+        o.category_id,
+        o.quantity,
+        o.price,
+        o.location,
+        o.delivery,
+        o.notes,
+        1 - (o.embedding <=> query_embedding) as similarity
+    from offerings as o
+    where o.embedding is not null
+    order by o.embedding <=> query_embedding
+    limit match_count;
+$$;
 
 -- ============================================================
 -- MATCHES
