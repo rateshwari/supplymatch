@@ -3,6 +3,7 @@ from supabase import Client
 
 from app.auth import require_supplier_user
 from app.deps import get_supabase_client
+from app.services.embeddings import build_embedding_text, generate_embedding
 from app.schemas.offering import (
     OfferingCreateRequest,
     OfferingResponse,
@@ -42,6 +43,13 @@ def create_offering(
         )
 
     payload = offering.model_dump()
+
+    embedding_text = build_embedding_text(
+        offering.product,
+        offering.notes,
+    )
+
+    payload["embedding"] = generate_embedding(embedding_text)
     payload["user_id"] = user_id
 
     response = (

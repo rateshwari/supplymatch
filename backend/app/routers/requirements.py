@@ -3,6 +3,7 @@ from supabase import Client
 
 from app.auth import get_current_user, require_client_user
 from app.deps import get_supabase_client
+from app.services.embeddings import build_embedding_text, generate_embedding
 from app.schemas.requirement import (
     RequirementCreateRequest,
     RequirementResponse,
@@ -42,6 +43,13 @@ def create_requirement(
         )
 
     payload = requirement.model_dump()
+
+    embedding_text = build_embedding_text(
+        requirement.product,
+        requirement.notes,
+    )
+
+    payload["embedding"] = generate_embedding(embedding_text)
     payload["user_id"] = user_id
 
     response = (
