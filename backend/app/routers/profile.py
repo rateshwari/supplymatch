@@ -3,12 +3,59 @@ from supabase import Client
 
 from app.auth import get_current_user
 from app.deps import get_supabase_client
-from app.schemas.profile import ProfileUpdateRequest
+from app.schemas.profile import ProfileCreateRequest, ProfileUpdateRequest
 
 router = APIRouter(
     prefix="/api/v1/profile",
     tags=["profile"],
 )
+
+
+@router.post(
+    "/me",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_my_profile(
+    profile: ProfileCreateRequest,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase_client),
+):
+    user_id = current_user["sub"]
+
+    existing_response = (
+        supabase
+        .table("profiles")
+        .select("id")
+        .eq("id", user_id)
+        .maybe_single()
+        .execute()
+    )
+
+    if existing_response.data:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Profile already exists",
+        )
+
+    payload = profile.model_dump()
+    payload["id"] = user_id
+
+    response = (
+        supabase
+        .table("profiles")
+        .insert(payload)
+        .select("id, role, name, company, created_at")
+        .maybe_single()
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to create profile",
+        )
+
+    return response.data
 
 
 @router.get("/me")

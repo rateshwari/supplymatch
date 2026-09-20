@@ -40,6 +40,139 @@ def override_current_user():
         "role": "client",
     }
 
+def make_create_supabase_mock(existing_profile, created_profile, expected_payload):
+    class Query:
+        def __init__(self):
+            self.operation = None
+
+        def select(self, *_args):
+            return self
+
+        def eq(self, column, value):
+            assert column == "id"
+            assert value == "user-123"
+            return self
+
+        def maybe_single(self):
+            return self
+
+        def insert(self, payload):
+            self.operation = "insert"
+            assert payload == expected_payload
+            return self
+
+        def execute(self):
+            if self.operation == "insert":
+                return SimpleNamespace(data=created_profile)
+
+            return SimpleNamespace(data=existing_profile)
+
+    class SupabaseMock:
+        def table(self, table_name):
+            assert table_name == "profiles"
+            return Query()
+
+    return SupabaseMock()
+
+
+def test_create_my_profile_success():
+    profile = {
+        "id": "user-123",
+        "role": "client",
+        "name": "Test User",
+        "company": "Test Company",
+        "created_at": "2026-09-20T00:00:00+00:00",
+    }
+
+    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[get_supabase_client] = lambda: make_create_supabase_mock(
+        None,
+        profile,
+        {
+            "role": "client",
+            "name": "Test User",
+            "company": "Test Company",
+            "id": "user-123",
+        },
+    )
+
+    try:
+        response = client.post(
+            "/api/v1/profile/me",
+            json={
+                "role": "client",
+                "name": "Test User",
+                "company": "Test Company",
+            },
+        )
+
+        assert response.status_code == 201
+        assert response.json() == profile
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_create_my_profile_rejects_duplicate():
+    existing_profile = {
+        "id": "user-123",
+    }
+
+    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[get_supabase_client] = lambda: make_create_supabase_mock(
+        existing_profile,
+        None,
+        {},
+    )
+
+    try:
+        response = client.post(
+            "/api/v1/profile/me",
+            json={
+                "role": "client",
+                "name": "Test User",
+            },
+        )
+
+        assert response.status_code == 409
+        assert response.json() == {
+            "detail": "Profile already exists"
+        }
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_create_my_profile_rejects_invalid_role():
+    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[get_supabase_client] = lambda: make_create_supabase_mock(
+        None,
+        None,
+        {},
+    )
+
+    try:
+        response = client.post(
+            "/api/v1/profile/me",
+            json={
+                "role": "admin",
+                "name": "Test User",
+            },
+        )
+
+        assert response.status_code == 422
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_create_my_profile_requires_authentication():
+    response = client.post(
+        "/api/v1/profile/me",
+        json={
+            "role": "client",
+            "name": "Test User",
+        },
+    )
+
+    assert response.status_code == 401
 
 def test_get_my_profile_success():
     profile = {
