@@ -1,11 +1,15 @@
 import { api } from "./api";
+
 import type {
   CreateOfferingRequest,
+  CreateProfileRequest,
   CreateRequirementRequest,
   Match,
   Notification,
   Offering,
+  Profile,
   Requirement,
+  UpdateProfileRequest,
 } from "../types/api";
 
 export function createRequirement(
@@ -61,5 +65,27 @@ export function markNotificationAsRead(
   return api.patch<Notification>(
     `/api/v1/notifications/${notificationId}/read`,
     {},
+  );
+}
+
+export function createProfile(
+  payload: CreateProfileRequest,
+): Promise<Profile> {
+  return api.post<Profile>(
+    "/api/v1/profile/me",
+    payload,
+  );
+}
+
+export function getMyProfile(): Promise<Profile> {
+  return api.get<Profile>("/api/v1/profile/me");
+}
+
+export function updateMyProfile(
+  payload: UpdateProfileRequest,
+): Promise<Profile> {
+  return api.patch<Profile>(
+    "/api/v1/profile/me",
+    payload,
   );
 }
