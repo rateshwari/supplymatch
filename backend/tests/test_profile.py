@@ -18,7 +18,7 @@ def make_supabase_mock(profile_data):
         def eq(self, *_args):
             return self
 
-        def single(self):
+        def maybe_single(self):
             return self
 
         def execute(self):

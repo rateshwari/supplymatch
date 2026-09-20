@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.get("/me")
-async def get_my_profile(
+def get_my_profile(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase_client),
 ):
@@ -22,7 +22,7 @@ async def get_my_profile(
         .table("profiles")
         .select("id, role, name, company, created_at")
         .eq("id", user_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
