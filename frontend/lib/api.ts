@@ -5,6 +5,16 @@ type ApiError = {
   detail?: string;
 };
 
+export class ApiRequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+  }
+}
+
 type AccessTokenProvider = () => Promise<string | null>;
 
 let accessTokenProvider: AccessTokenProvider | null = null;
@@ -37,17 +47,20 @@ async function request<T>(
   });
 
   if (!response.ok) {
-    let errorMessage = "An unexpected error occurred.";
+  let errorMessage = "An unexpected error occurred.";
 
-    try {
-      const error: ApiError = await response.json();
-      errorMessage = error.detail || errorMessage;
-    } catch {
-      // Keep the default error message when the response is not JSON.
-    }
-
-    throw new Error(errorMessage);
+  try {
+    const error: ApiError = await response.json();
+    errorMessage = error.detail || errorMessage;
+  } catch {
+    // Keep the default error message when the response is not JSON.
   }
+
+  throw new ApiRequestError(
+    errorMessage,
+    response.status,
+  );
+}
 
   return response.json() as Promise<T>;
 }

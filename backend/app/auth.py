@@ -1,12 +1,16 @@
+import ssl
 from typing import Any
+import ssl
+import certifi
 
+import certifi
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jwt import PyJWKClient
 from supabase import Client
-
-from app.config import get_settings
 from app.deps import get_supabase_client
+from app.config import get_settings
 
 security = HTTPBearer(auto_error=False)
 
@@ -15,11 +19,39 @@ def verify_jwt(token: str) -> dict[str, Any]:
     settings = get_settings()
 
     try:
+        header = jwt.get_unverified_header(token)
+
+        if header.get("alg") != "ES256":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication token",
+            )
+
+        jwks_url = (
+            f"{settings.supabase_url}"
+            "/auth/v1/.well-known/jwks.json"
+        )
+
+        ssl_context = ssl.create_default_context(
+        cafile=certifi.where(),
+        )
+
+        ssl_context = ssl.create_default_context(
+        cafile=certifi.where(),
+    )
+        jwks_client = PyJWKClient(
+            jwks_url,
+            ssl_context=ssl_context,
+        )
+
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+
         payload = jwt.decode(
             token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["ES256"],
             audience="authenticated",
+            issuer=f"{settings.supabase_url}/auth/v1",
         )
 
         if not payload.get("sub"):
@@ -30,7 +62,10 @@ def verify_jwt(token: str) -> dict[str, Any]:
 
         return payload
 
+    except HTTPException:
+        raise
     except jwt.PyJWTError as exc:
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token",
@@ -57,8 +92,7 @@ def require_client_user(
     user_id = current_user["sub"]
 
     response = (
-        supabase
-        .table("profiles")
+        supabase.table("profiles")
         .select("role")
         .eq("id", user_id)
         .maybe_single()
@@ -66,18 +100,16 @@ def require_client_user(
     )
 
     if not response.data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found",
-        )
+        raise HTTPException(status_code=404, detail="Profile not found")
 
     if response.data["role"] != "client":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=403,
             detail="Only client accounts can create requirements",
         )
 
     return current_user
+
 
 def require_supplier_user(
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -86,8 +118,7 @@ def require_supplier_user(
     user_id = current_user["sub"]
 
     response = (
-        supabase
-        .table("profiles")
+        supabase.table("profiles")
         .select("role")
         .eq("id", user_id)
         .maybe_single()
@@ -95,14 +126,11 @@ def require_supplier_user(
     )
 
     if not response.data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile not found",
-        )
+        raise HTTPException(status_code=404, detail="Profile not found")
 
     if response.data["role"] != "supplier":
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=403,
             detail="Only supplier accounts can create offerings",
         )
 
