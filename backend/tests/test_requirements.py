@@ -50,8 +50,8 @@ def test_create_requirement_success():
 
     # Mock the requirements insert.
     requirements_table = MagicMock()
-    requirements_table.insert.return_value.select.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data=returned_requirement)
+    requirements_table.insert.return_value.select.return_value.execute.return_value = (
+        MagicMock(data=[returned_requirement])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -296,8 +296,8 @@ def test_create_requirement_returns_400_when_insert_fails():
     )
 
     requirements_table = MagicMock()
-    requirements_table.insert.return_value.select.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data=None)
+    requirements_table.insert.return_value.select.return_value.execute.return_value = (
+        MagicMock(data=[])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
