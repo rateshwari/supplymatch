@@ -1,19 +1,15 @@
 import jwt
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
+from fastapi.testclient import TestClient
 
 from app.auth import verify_jwt
 from app.config import get_settings
-from fastapi.testclient import TestClient
-
 from app.main import app
 
 
-
-
-
-TEST_SECRET = "test-secret-key-that-is-at-least-32-bytes-long"
-
 client = TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 def mock_settings(monkeypatch):
@@ -31,7 +27,7 @@ def mock_settings(monkeypatch):
     )
     monkeypatch.setenv(
         "SUPABASE_JWT_SECRET",
-        TEST_SECRET,
+        "unused-test-secret",
     )
 
     get_settings.cache_clear()
@@ -41,18 +37,51 @@ def mock_settings(monkeypatch):
     get_settings.cache_clear()
 
 
-def test_verify_jwt_returns_payload():
-    token = jwt.encode(
+@pytest.fixture
+def signing_key():
+    return ec.generate_private_key(ec.SECP256R1())
+
+
+@pytest.fixture
+def valid_token(signing_key):
+    return jwt.encode(
         {
             "sub": "test-user-id",
             "role": "authenticated",
             "aud": "authenticated",
+            "iss": "https://example.supabase.co/auth/v1",
         },
-        TEST_SECRET,
-        algorithm="HS256",
+        signing_key,
+        algorithm="ES256",
+        headers={
+            "kid": "test-key-id",
+        },
     )
 
-    payload = verify_jwt(token)
+
+@pytest.fixture
+def mock_jwks(monkeypatch, signing_key):
+    class MockSigningKey:
+        key = signing_key.public_key()
+
+    class MockPyJWKClient:
+        def __init__(self, url, **kwargs):
+            assert url == (
+                "https://example.supabase.co"
+                "/auth/v1/.well-known/jwks.json"
+            )
+
+        def get_signing_key_from_jwt(self, token):
+            return MockSigningKey()
+
+    monkeypatch.setattr(
+        "app.auth.PyJWKClient",
+        MockPyJWKClient,
+    )
+
+
+def test_verify_jwt_returns_payload(valid_token, mock_jwks):
+    payload = verify_jwt(valid_token)
 
     assert payload["sub"] == "test-user-id"
     assert payload["role"] == "authenticated"
@@ -62,30 +91,44 @@ def test_verify_jwt_rejects_invalid_token():
     with pytest.raises(Exception):
         verify_jwt("not-a-valid-jwt")
 
-def test_verify_jwt_rejects_wrong_signing_key():
+
+def test_verify_jwt_rejects_wrong_signing_key(mock_jwks):
+    different_key = ec.generate_private_key(ec.SECP256R1())
+
     token = jwt.encode(
         {
             "sub": "test-user-id",
             "role": "authenticated",
             "aud": "authenticated",
+            "iss": "https://example.supabase.co/auth/v1",
         },
-        "different-test-signing-key-that-is-at-least-32-bytes",
-        algorithm="HS256",
+        different_key,
+        algorithm="ES256",
+        headers={
+            "kid": "test-key-id",
+        },
     )
 
     with pytest.raises(Exception):
         verify_jwt(token)
 
 
-def test_verify_jwt_rejects_non_authenticated_audience():
+def test_verify_jwt_rejects_non_authenticated_audience(
+    signing_key,
+    mock_jwks,
+):
     token = jwt.encode(
         {
             "sub": "test-user-id",
             "role": "authenticated",
             "aud": "wrong-audience",
+            "iss": "https://example.supabase.co/auth/v1",
         },
-        TEST_SECRET,
-        algorithm="HS256",
+        signing_key,
+        algorithm="ES256",
+        headers={
+            "kid": "test-key-id",
+        },
     )
 
     with pytest.raises(Exception):
@@ -106,20 +149,11 @@ def test_me_with_invalid_token():
 
     assert response.status_code == 401
 
-def test_me_with_valid_token():
-    token = jwt.encode(
-        {
-            "sub": "test-user-id",
-            "role": "authenticated",
-            "aud": "authenticated",
-        },
-        TEST_SECRET,
-        algorithm="HS256",
-    )
 
+def test_me_with_valid_token(valid_token, mock_jwks):
     response = client.get(
         "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer {valid_token}"},
     )
 
     assert response.status_code == 200
