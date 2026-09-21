@@ -59,7 +59,6 @@ def create_requirement(
             "id, user_id, product, category_id, quantity, "
             "budget, location, timeline, notes, created_at"
         )
-        .maybe_single()
         .execute()
     )
 
@@ -69,7 +68,9 @@ def create_requirement(
             detail="Failed to create requirement",
         )
 
-    return response.data
+    return response.data[0]
+
+
 
 
 @router.get(
