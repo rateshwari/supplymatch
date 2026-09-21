@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from app.auth import get_current_user
+from app.auth import get_current_user, require_client_user
 from app.deps import get_supabase_client
 from app.main import app
 
@@ -20,12 +20,10 @@ def build_client_profile_table():
     (
         profiles_table.select.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
     ) = MagicMock(
-        data={"role": "client"}
+        data=[{"role": "client"}]
     )
-
     return profiles_table
 
 
@@ -39,10 +37,9 @@ def test_generate_requirement_matches_success():
         requirements_table.select.return_value
         .eq.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
     ) = MagicMock(
-        data={"id": "req-1"}
+        data=[{"id": "req-1"}]
     )
 
     matches_table = MagicMock()
@@ -58,11 +55,11 @@ def test_generate_requirement_matches_success():
 
     (
         notifications_table.insert.return_value
-        .select.return_value
-        .maybe_single.return_value
-        .execute.return_value
-    ) = MagicMock(
-        data={
+    .select.return_value
+    .execute.return_value
+) = MagicMock(
+    data=[
+        {
             "id": "notification-1",
             "user_id": "supplier-1",
             "match_id": "match-1",
@@ -73,6 +70,7 @@ def test_generate_requirement_matches_success():
             "read": False,
             "created_at": "2026-09-20T10:00:00+00:00",
         }
+    ]
     )
 
     persisted_match = {
@@ -98,10 +96,9 @@ def test_generate_requirement_matches_success():
     (
         matches_table.upsert.return_value
         .select.return_value
-        .maybe_single.return_value
         .execute.return_value
     ) = MagicMock(
-        data=persisted_match
+        data=[persisted_match]
     )
 
     def table(name):
@@ -117,7 +114,7 @@ def test_generate_requirement_matches_success():
 
     supabase.table.side_effect = table
 
-    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[require_client_user] = override_current_user
     app.dependency_overrides[get_supabase_client] = lambda: supabase
 
     ranked_matches = [
@@ -177,10 +174,9 @@ def test_generate_requirement_matches_rejects_unknown_requirement():
         requirements_table.select.return_value
         .eq.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
     ) = MagicMock(
-        data=None
+        data=[]
     )
 
     def table(name):
@@ -192,7 +188,7 @@ def test_generate_requirement_matches_rejects_unknown_requirement():
 
     supabase.table.side_effect = table
 
-    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[require_client_user] = override_current_user
     app.dependency_overrides[get_supabase_client] = lambda: supabase
 
     try:
@@ -216,10 +212,10 @@ def test_generate_requirement_matches_returns_empty_list():
         requirements_table.select.return_value
         .eq.return_value
         .eq.return_value
-        .maybe_single.return_value
+   
         .execute.return_value
     ) = MagicMock(
-        data={"id": "req-1"}
+        data=[{"id": "req-1"}]
     )
 
     def table(name):
@@ -231,7 +227,7 @@ def test_generate_requirement_matches_returns_empty_list():
 
     supabase.table.side_effect = table
 
-    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[require_client_user] = override_current_user
     app.dependency_overrides[get_supabase_client] = lambda: supabase
 
     try:
@@ -259,10 +255,9 @@ def test_get_requirement_matches_success():
         requirements_table.select.return_value
         .eq.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
     ) = MagicMock(
-        data={"id": "req-1"}
+        data=[{"id": "req-1"}]
     )
 
     matches_table = MagicMock()
@@ -309,7 +304,8 @@ def test_get_requirement_matches_success():
 
     supabase.table.side_effect = table
 
-    app.dependency_overrides[get_current_user] = override_current_user
+
+    app.dependency_overrides[require_client_user] = override_current_user
     app.dependency_overrides[get_supabase_client] = lambda: supabase
 
     try:
@@ -333,10 +329,9 @@ def test_get_requirement_matches_rejects_unknown_requirement():
         requirements_table.select.return_value
         .eq.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
     ) = MagicMock(
-        data=None
+        data=[]
     )
 
     def table(name):
@@ -348,7 +343,7 @@ def test_get_requirement_matches_rejects_unknown_requirement():
 
     supabase.table.side_effect = table
 
-    app.dependency_overrides[get_current_user] = override_current_user
+    app.dependency_overrides[require_client_user] = override_current_user
     app.dependency_overrides[get_supabase_client] = lambda: supabase
 
     try:
