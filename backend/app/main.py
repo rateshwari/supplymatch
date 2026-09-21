@@ -5,6 +5,7 @@ from app.routers.profile import router as profile_router
 from app.routers.requirements import router as requirements_router
 from app.routers.offerings import router as offerings_router
 from app.routers import auth, matches, offerings, profile, requirements
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import (
     auth,
     matches,
@@ -18,6 +19,16 @@ app = FastAPI(
     title="SupplyMatch API",
     description="AI-powered B2B supplier matching platform",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
