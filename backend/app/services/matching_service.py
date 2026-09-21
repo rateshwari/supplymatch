@@ -37,7 +37,6 @@ def get_requirement(
             "budget, location, timeline, notes"
         )
         .eq("id", requirement_id)
-        .maybe_single()
         .execute()
     )
 
@@ -47,7 +46,7 @@ def get_requirement(
             detail="Requirement not found",
         )
 
-    return response.data
+    return response.data[0]
 
 
 def calculate_offering_match(

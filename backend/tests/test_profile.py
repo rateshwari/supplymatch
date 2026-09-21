@@ -20,11 +20,9 @@ def make_supabase_mock(profile_data):
             assert value == "user-123"
             return self
 
-        def maybe_single(self):
-            return self
-
         def execute(self):
-            return SimpleNamespace(data=profile_data)
+            data = [] if profile_data is None else [profile_data]
+            return SimpleNamespace(data=data)
 
     class SupabaseMock:
         def table(self, table_name):
@@ -40,7 +38,11 @@ def override_current_user():
         "role": "client",
     }
 
-def make_create_supabase_mock(existing_profile, created_profile, expected_payload):
+def make_create_supabase_mock(
+    existing_profile,
+    created_profile,
+    expected_payload,
+):
     class Query:
         def __init__(self):
             self.operation = None
@@ -53,9 +55,6 @@ def make_create_supabase_mock(existing_profile, created_profile, expected_payloa
             assert value == "user-123"
             return self
 
-        def maybe_single(self):
-            return self
-
         def insert(self, payload):
             self.operation = "insert"
             assert payload == expected_payload
@@ -63,9 +62,11 @@ def make_create_supabase_mock(existing_profile, created_profile, expected_payloa
 
         def execute(self):
             if self.operation == "insert":
-                return SimpleNamespace(data=created_profile)
+                data = [] if created_profile is None else [created_profile]
+                return SimpleNamespace(data=data)
 
-            return SimpleNamespace(data=existing_profile)
+            data = [] if existing_profile is None else [existing_profile]
+            return SimpleNamespace(data=data)
 
     class SupabaseMock:
         def table(self, table_name):
@@ -73,7 +74,6 @@ def make_create_supabase_mock(existing_profile, created_profile, expected_payloa
             return Query()
 
     return SupabaseMock()
-
 
 def test_create_my_profile_success():
     profile = {
@@ -230,11 +230,9 @@ def make_update_supabase_mock(profile_data, expected_updates):
             assert value == "user-123"
             return self
 
-        def maybe_single(self):
-            return self
-
         def execute(self):
-            return SimpleNamespace(data=profile_data)
+            data = [] if profile_data is None else [profile_data]
+            return SimpleNamespace(data=data)
 
     class SupabaseMock:
         def table(self, table_name):

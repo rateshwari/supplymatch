@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { getMyProfile } from "../../lib/supplymatch-api";
@@ -48,9 +49,7 @@ export default function DashboardPage() {
     return (
       <main className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <p className="text-sm text-slate-600">
-            Loading your dashboard...
-          </p>
+          <p className="text-sm text-slate-600">Loading your dashboard...</p>
         </div>
       </main>
     );
@@ -89,13 +88,9 @@ export default function DashboardPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
-            <p className="text-sm font-semibold text-blue-600">
-              SupplyMatch
-            </p>
+            <p className="text-sm font-semibold text-blue-600">SupplyMatch</p>
 
-            <h1 className="text-xl font-bold text-slate-900">
-              Dashboard
-            </h1>
+            <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
           </div>
 
           <button
@@ -119,17 +114,13 @@ export default function DashboardPage() {
           </h2>
 
           {profile.company && (
-            <p className="mt-2 text-slate-600">
-              {profile.company}
-            </p>
+            <p className="mt-2 text-slate-600">{profile.company}</p>
           )}
         </section>
 
         <section className="mt-6 grid gap-6 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <p className="text-sm font-medium text-slate-500">
-              Account type
-            </p>
+            <p className="text-sm font-medium text-slate-500">Account type</p>
 
             <p className="mt-2 text-xl font-semibold capitalize text-slate-900">
               {profile.role}
@@ -147,19 +138,77 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-8">
-          <h2 className="text-xl font-semibold text-slate-900">
-            {isClient
-              ? "Post a requirement"
-              : "Add your offering"}
-          </h2>
+        {isClient ? (
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-blue-600">
+                  Procurement workspace
+                </p>
 
-          <p className="mt-2 text-sm text-slate-600">
-            {isClient
-              ? "Your procurement workspace will appear here."
-              : "Your supplier workspace will appear here."}
-          </p>
-        </section>
+                <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                  Find the right suppliers
+                </h2>
+
+                <p className="mt-2 max-w-xl text-sm text-slate-600">
+                  Post what you need and let SupplyMatch identify suppliers that
+                  match your requirements.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/requirements/new"
+                  className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Post a Requirement
+                </Link>
+
+                <Link
+                  href="/requirements"
+                  className="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  My Requirements
+                </Link>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-blue-600">
+                  Supplier workspace
+                </p>
+
+                <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                  Showcase what you offer
+                </h2>
+
+                <p className="mt-2 max-w-xl text-sm text-slate-600">
+                  Add your products and services so SupplyMatch can connect you
+                  with relevant buyer requirements.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/offerings"
+                  className="inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  My Offerings
+                </Link>
+
+                <Link
+                  href="/offerings/new"
+                  className="inline-flex shrink-0 items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Add Offering
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

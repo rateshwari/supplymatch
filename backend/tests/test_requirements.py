@@ -38,20 +38,19 @@ def test_create_requirement_success():
 
     # Mock the profiles table used by require_client_user.
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "client"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "client"}])
     )
-
     # Mock the categories table used by the requirement endpoint.
     categories_table = MagicMock()
-    categories_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"id": 1})
+    categories_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"id": 1}])
     )
 
     # Mock the requirements insert.
     requirements_table = MagicMock()
-    requirements_table.insert.return_value.select.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data=returned_requirement)
+    requirements_table.insert.return_value.select.return_value.execute.return_value = (
+        MagicMock(data=[returned_requirement])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -210,13 +209,13 @@ def test_create_requirement_returns_404_for_unknown_category():
     mock_supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "client"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "client"}])
     )
 
     categories_table = MagicMock()
-    categories_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data=None)
+    categories_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -250,8 +249,8 @@ def test_create_requirement_returns_403_for_supplier():
     mock_supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "supplier"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "supplier"}])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -286,18 +285,18 @@ def test_create_requirement_returns_400_when_insert_fails():
     mock_supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "client"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "client"}])
     )
 
     categories_table = MagicMock()
-    categories_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"id": 1})
+    categories_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"id": 1}])
     )
 
     requirements_table = MagicMock()
-    requirements_table.insert.return_value.select.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data=None)
+    requirements_table.insert.return_value.select.return_value.execute.return_value = (
+        MagicMock(data=[])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -380,8 +379,8 @@ def test_get_my_requirements_success():
     ]
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "client"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "client"}])
     )
 
     requirements_table = MagicMock()
@@ -433,8 +432,8 @@ def test_get_my_requirements_returns_empty_list():
     )
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "client"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "client"}])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -464,8 +463,8 @@ def test_get_my_requirements_uses_authenticated_user_id():
     )
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "client"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "client"}])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {
@@ -497,8 +496,8 @@ def test_supplier_cannot_list_requirements():
     mock_supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value = (
-        MagicMock(data={"role": "supplier"})
+    profiles_table.select.return_value.eq.return_value.execute.return_value = (
+        MagicMock(data=[{"role": "supplier"}])
     )
 
     mock_supabase.table.side_effect = lambda table_name: {

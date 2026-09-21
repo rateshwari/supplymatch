@@ -101,9 +101,8 @@ def test_mark_notification_as_read_success():
         .eq.return_value
         .eq.return_value
         .select.return_value
-        .maybe_single.return_value
         .execute.return_value
-    ) = MagicMock(data=notification)
+    ) = MagicMock(data=[notification])
 
     supabase.table.return_value = notifications_table
 
@@ -130,9 +129,8 @@ def test_mark_notification_as_read_rejects_unknown_notification():
         .eq.return_value
         .eq.return_value
         .select.return_value
-        .maybe_single.return_value
         .execute.return_value
-    ) = MagicMock(data=None)
+    ) = MagicMock(data=[])
 
     supabase.table.return_value = notifications_table
 

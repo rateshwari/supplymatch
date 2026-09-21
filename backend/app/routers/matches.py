@@ -23,11 +23,10 @@ def verify_requirement_ownership(
         .select("id")
         .eq("id", requirement_id)
         .eq("user_id", user_id)
-        .maybe_single()
         .execute()
     )
 
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Requirement not found",
@@ -73,33 +72,35 @@ def generate_requirement_matches(
         }
 
         response = (
-            supabase.table("matches")
-            .upsert(
-                payload,
-                on_conflict="requirement_id,offering_id",
-            )
-            .select(
-                "id, requirement_id, offering_id, score, "
-                "breakdown, explanation, tags, status, created_at"
-            )
-            .maybe_single()
-            .execute()
+        supabase.table("matches")
+        .upsert(
+            payload,
+            on_conflict="requirement_id,offering_id",
+        )
+        .select(
+            "id, requirement_id, offering_id, score, "
+            "breakdown, explanation, tags, status, created_at"
+        )
+        .execute()
+    )
+
+    if not response or not response.data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to save match",
         )
 
-        if not response.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to save match",
-            )
+    saved_match = response.data[0]
 
-        persisted_matches.append(response.data)
-        create_match_notification(
-            supabase,
-            supplier_user_id=match["supplier_user_id"],
-            match_id=response.data["id"],
-            requirement_product=match["product"],
-            score=match["score"],
-        )
+    persisted_matches.append(saved_match)
+
+    create_match_notification(
+        supabase,
+        supplier_user_id=match["supplier_user_id"],
+        match_id=saved_match["id"],
+        requirement_product=match["product"],
+        score=match["score"],
+)
 
     return persisted_matches
 
