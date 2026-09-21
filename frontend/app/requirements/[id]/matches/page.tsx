@@ -17,7 +17,11 @@ type MatchesPageProps = {
   }>;
 };
 
-function percentage(score: number): string {
+function matchScorePercentage(score: number): string {
+  return `${Math.round(score)}%`;
+}
+
+function componentPercentage(score: number): string {
   return `${Math.round(score * 100)}%`;
 }
 
@@ -245,7 +249,7 @@ export default function MatchesPage({ params }: MatchesPageProps) {
                     Match Score
                   </p>
                   <p className="mt-1 text-3xl font-bold text-blue-700">
-                    {percentage(match.score)}
+                    {matchScorePercentage(match.score)}
                   </p>
                 </div>
               </div>
@@ -319,7 +323,7 @@ function Score({
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-slate-600">{label}</p>
         <p className="text-sm font-bold text-slate-900">
-          {percentage(value)}
+          {componentPercentage(value)}
         </p>
       </div>
 
