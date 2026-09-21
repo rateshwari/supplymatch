@@ -95,14 +95,13 @@ def require_client_user(
         supabase.table("profiles")
         .select("role")
         .eq("id", user_id)
-        .maybe_single()
         .execute()
     )
 
     if not response.data:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    if response.data["role"] != "client":
+    if response.data[0]["role"] != "client":
         raise HTTPException(
             status_code=403,
             detail="Only client accounts can create requirements",
@@ -121,14 +120,13 @@ def require_supplier_user(
         supabase.table("profiles")
         .select("role")
         .eq("id", user_id)
-        .maybe_single()
         .execute()
     )
 
     if not response.data:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    if response.data["role"] != "supplier":
+    if response.data[0]["role"] != "supplier":
         raise HTTPException(
             status_code=403,
             detail="Only supplier accounts can create offerings",

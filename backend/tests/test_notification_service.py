@@ -28,9 +28,8 @@ def test_create_match_notification_success():
     (
         notifications_table.insert.return_value
         .select.return_value
-        .maybe_single.return_value
         .execute.return_value
-    ) = MagicMock(data=notification)
+    ) = MagicMock(data=[notification])
 
     result = create_match_notification(
         supabase,

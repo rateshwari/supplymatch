@@ -179,7 +179,9 @@ def test_create_offering_requires_supplier_role():
     supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.execute.return_value.data = []
+    profiles_table.select.return_value.eq.return_value.execute.return_value.data = [
+        {"role": "client"}
+    ]
 
     supabase.table.return_value = profiles_table
 
@@ -391,10 +393,9 @@ def test_get_my_offerings_success():
     supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
-        "role": "supplier"
-    }
-
+    profiles_table.select.return_value.eq.return_value.execute.return_value.data = [
+        {"role": "supplier"}
+    ]
     offerings_table = MagicMock()
     offerings_table.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
         {
@@ -442,9 +443,9 @@ def test_get_my_offerings_empty():
     supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
-        "role": "supplier"
-    }
+    profiles_table.select.return_value.eq.return_value.execute.return_value.data = [
+        {"role": "supplier"}
+    ]
 
     offerings_table = MagicMock()
     offerings_table.select.return_value.eq.return_value.execute.return_value.data = []
@@ -480,9 +481,9 @@ def test_get_my_offerings_rejects_client():
     supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = {
-        "role": "client"
-    }
+    profiles_table.select.return_value.eq.return_value.execute.return_value.data = [
+        {"role": "client"}
+    ]
 
     supabase.table.return_value = profiles_table
 
@@ -504,9 +505,7 @@ def test_get_my_offerings_profile_not_found():
     supabase = MagicMock()
 
     profiles_table = MagicMock()
-    profiles_table.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = (
-        None
-    )
+    profiles_table.select.return_value.eq.return_value.execute.return_value.data = []
 
     supabase.table.return_value = profiles_table
 

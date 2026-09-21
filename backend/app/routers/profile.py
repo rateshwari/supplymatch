@@ -27,11 +27,10 @@ def create_my_profile(
         .table("profiles")
         .select("id")
         .eq("id", user_id)
-        .maybe_single()
         .execute()
     )
 
-    if existing_response.data:
+    if existing_response and existing_response.data:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Profile already exists",
@@ -45,17 +44,16 @@ def create_my_profile(
         .table("profiles")
         .insert(payload)
         .select("id, role, name, company, created_at")
-        .maybe_single()
         .execute()
     )
 
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to create profile",
         )
 
-    return response.data
+    return response.data[0]
 
 
 @router.get("/me")
@@ -66,21 +64,19 @@ def get_my_profile(
     user_id = current_user["sub"]
 
     response = (
-        supabase
-        .table("profiles")
+        supabase.table("profiles")
         .select("id, role, name, company, created_at")
         .eq("id", user_id)
-        .maybe_single()
         .execute()
     )
 
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Profile not found",
         )
 
-    return response.data
+    return response.data[0]
 
 
 @router.patch("/me")
@@ -111,14 +107,13 @@ def update_my_profile(
         .update(updates)
         .eq("id", user_id)
         .select("id, role, name, company, created_at")
-        .maybe_single()
         .execute()
     )
 
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Profile not found",
         )
 
-    return response.data
+    return response.data[0]

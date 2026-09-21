@@ -48,8 +48,10 @@ def create_match_notification(
         .select(
             "id, user_id, match_id, message, read, created_at"
         )
-        .maybe_single()
         .execute()
     )
 
-    return response.data
+    if not response or not response.data:
+        return None
+
+    return response.data[0]

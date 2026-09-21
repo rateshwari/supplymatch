@@ -28,9 +28,8 @@ def test_get_requirement_success():
         supabase.table.return_value
         .select.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
-    ) = MagicMock(data=requirement)
+    ) = MagicMock(data=[requirement])
 
     result = get_requirement(
         supabase,
@@ -47,9 +46,8 @@ def test_get_requirement_not_found():
         supabase.table.return_value
         .select.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
-    ) = MagicMock(data=None)
+    ) = MagicMock(data=[])
 
     with pytest.raises(Exception) as exc_info:
         get_requirement(
@@ -130,9 +128,8 @@ def test_find_requirement_matches(
         supabase.table.return_value
         .select.return_value
         .eq.return_value
-        .maybe_single.return_value
         .execute.return_value
-    ) = MagicMock(data=requirement)
+    ) = MagicMock(data=[requirement])
 
     mock_find_similar_offerings.return_value = [offering]
 
