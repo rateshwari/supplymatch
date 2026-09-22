@@ -10,6 +10,112 @@ router = APIRouter(
     tags=["supplier matches"],
 )
 
+PAGE_SIZE = 500
+QUERY_BATCH_SIZE = 100
+
+
+def get_supplier_offering_ids(
+    supabase: Client,
+    user_id: str,
+) -> list[str]:
+    offering_ids: list[str] = []
+    start = 0
+
+    while True:
+        response = (
+            supabase
+            .table("offerings")
+            .select("id")
+            .eq("user_id", user_id)
+            .range(start, start + PAGE_SIZE - 1)
+            .execute()
+        )
+
+        rows = response.data or []
+
+        if not rows:
+            break
+
+        offering_ids.extend(
+            row["id"]
+            for row in rows
+        )
+
+        if len(rows) < PAGE_SIZE:
+            break
+
+        start += PAGE_SIZE
+
+    return offering_ids
+
+
+def get_matches_for_offerings(
+    supabase: Client,
+    offering_ids: list[str],
+) -> list[dict]:
+    matches: list[dict] = []
+
+    for start in range(
+        0,
+        len(offering_ids),
+        QUERY_BATCH_SIZE,
+    ):
+        batch = offering_ids[
+            start : start + QUERY_BATCH_SIZE
+        ]
+
+        response = (
+            supabase
+            .table("matches")
+            .select(
+                "id, requirement_id, offering_id, score, "
+                "breakdown, explanation, tags, status, created_at"
+            )
+            .in_("offering_id", batch)
+            .execute()
+        )
+
+        matches.extend(response.data or [])
+
+    matches.sort(
+        key=lambda match: match["score"],
+        reverse=True,
+    )
+
+    return matches
+
+
+def get_requirements(
+    supabase: Client,
+    requirement_ids: list[str],
+) -> dict[str, dict]:
+    requirements: dict[str, dict] = {}
+
+    for start in range(
+        0,
+        len(requirement_ids),
+        QUERY_BATCH_SIZE,
+    ):
+        batch = requirement_ids[
+            start : start + QUERY_BATCH_SIZE
+        ]
+
+        response = (
+            supabase
+            .table("requirements")
+            .select(
+                "id, product, category_id, quantity, budget, "
+                "location, timeline, notes"
+            )
+            .in_("id", batch)
+            .execute()
+        )
+
+        for requirement in response.data or []:
+            requirements[requirement["id"]] = requirement
+
+    return requirements
+
 
 @router.get(
     "/matches",
@@ -21,34 +127,18 @@ def get_supplier_matches(
 ):
     user_id = current_user["sub"]
 
-    offerings_response = (
-        supabase
-        .table("offerings")
-        .select("id")
-        .eq("user_id", user_id)
-        .execute()
+    offering_ids = get_supplier_offering_ids(
+        supabase,
+        user_id,
     )
 
-    offering_rows = offerings_response.data or []
-
-    if not offering_rows:
+    if not offering_ids:
         return []
 
-    offering_ids = [row["id"] for row in offering_rows]
-
-    matches_response = (
-        supabase
-        .table("matches")
-        .select(
-            "id, requirement_id, offering_id, score, "
-            "breakdown, explanation, tags, status, created_at"
-        )
-        .in_("offering_id", offering_ids)
-        .order("score", desc=True)
-        .execute()
+    matches = get_matches_for_offerings(
+        supabase,
+        offering_ids,
     )
-
-    matches = matches_response.data or []
 
     if not matches:
         return []
@@ -60,26 +150,17 @@ def get_supplier_matches(
         )
     )
 
-    requirements_response = (
-        supabase
-        .table("requirements")
-        .select(
-            "id, product, category_id, quantity, budget, "
-            "location, timeline, notes"
-        )
-        .in_("id", requirement_ids)
-        .execute()
+    requirements = get_requirements(
+        supabase,
+        requirement_ids,
     )
-
-    requirements = {
-        requirement["id"]: requirement
-        for requirement in (requirements_response.data or [])
-    }
 
     enriched_matches = []
 
     for match in matches:
-        requirement = requirements.get(match["requirement_id"])
+        requirement = requirements.get(
+            match["requirement_id"]
+        )
 
         if requirement is None:
             continue
