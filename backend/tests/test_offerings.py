@@ -519,3 +519,57 @@ def test_get_my_offerings_profile_not_found():
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Profile not found"
+
+
+def test_create_offering_rejects_unknown_fields():
+    app.dependency_overrides[
+        require_supplier_user
+    ] = override_supplier_user
+    app.dependency_overrides[
+        get_supabase_client
+    ] = override_supabase
+
+    try:
+        response = client.post(
+            "/api/v1/offerings",
+            json={
+                "product": "Industrial Steel",
+                "category_id": 1,
+                "quantity": "1000 kg",
+                "price": "₹75/kg",
+                "location": "Mumbai",
+                "delivery": "7 days",
+                "notes": "Grade A steel",
+                "user_id": "attacker-user",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 422
+
+
+def test_create_offering_rejects_empty_product():
+    app.dependency_overrides[
+        require_supplier_user
+    ] = override_supplier_user
+    app.dependency_overrides[
+        get_supabase_client
+    ] = override_supabase
+
+    try:
+        response = client.post(
+            "/api/v1/offerings",
+            json={
+                "product": "",
+                "category_id": 1,
+                "quantity": "1000 kg",
+                "price": "₹75/kg",
+                "location": "Mumbai",
+                "delivery": "7 days",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 422

@@ -1,11 +1,7 @@
 from fastapi import FastAPI
-
-from app.routers.auth import router as auth_router
-from app.routers.profile import router as profile_router
-from app.routers.requirements import router as requirements_router
-from app.routers.offerings import router as offerings_router
-from app.routers import auth, matches, offerings, profile, requirements
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import get_settings
 from app.routers import (
     auth,
     matches,
@@ -13,7 +9,11 @@ from app.routers import (
     offerings,
     profile,
     requirements,
+    supplier_matches,
 )
+
+
+settings = get_settings()
 
 app = FastAPI(
     title="SupplyMatch API",
@@ -21,14 +21,23 @@ app = FastAPI(
     version="0.1.0",
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
+        settings.frontend_origin,
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=[
+        "GET",
+        "POST",
+        "PATCH",
+        "OPTIONS",
+    ],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+    ],
 )
 
 
@@ -40,9 +49,10 @@ async def health_check():
     }
 
 
-app.include_router(auth_router)
-app.include_router(profile_router)
-app.include_router(requirements_router)
-app.include_router(offerings_router)
+app.include_router(auth.router)
+app.include_router(profile.router)
+app.include_router(requirements.router)
+app.include_router(offerings.router)
 app.include_router(matches.router)
 app.include_router(notifications.router)
+app.include_router(supplier_matches.router)
