@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getMyProfile } from "../../lib/supplymatch-api";
 import { supabase } from "../../lib/supabase";
 import type { Profile } from "../../types/api";
+import NotificationsPanel from "@/components/notifications-panel";
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -138,7 +139,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {isClient ? (
+                {isClient ? (
           <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
@@ -208,14 +209,18 @@ export default function DashboardPage() {
 
                 <Link
                 href="/supplier/matches"
-                className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
-                View Matched Requirements
+                  View Matched Requirements
                 </Link>
               </div>
             </div>
           </section>
         )}
+
+        <div className="mt-6">
+          <NotificationsPanel />
+        </div>
       </div>
     </main>
   );
