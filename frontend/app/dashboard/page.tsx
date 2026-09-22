@@ -205,6 +205,13 @@ export default function DashboardPage() {
                 >
                   Add Offering
                 </Link>
+
+                <Link
+                href="/supplier/matches"
+                className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                View Matched Requirements
+                </Link>
               </div>
             </div>
           </section>

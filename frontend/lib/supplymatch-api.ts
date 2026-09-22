@@ -9,6 +9,7 @@ import type {
   Offering,
   Profile,
   Requirement,
+  SupplierMatch,
   UpdateProfileRequest,
 } from "../types/api";
 
@@ -88,4 +89,8 @@ export function updateMyProfile(
     "/api/v1/profile/me",
     payload,
   );
+}
+
+export function getSupplierMatches(): Promise<SupplierMatch[]> {
+  return api.get<SupplierMatch[]>("/api/v1/supplier/matches");
 }

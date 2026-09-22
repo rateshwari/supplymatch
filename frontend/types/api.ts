@@ -110,3 +110,27 @@ export interface UpdateProfileRequest {
   name?: string;
   company?: string | null;
 }
+
+export interface SupplierMatchRequirement {
+  id: string;
+  product: string;
+  category_id: number;
+  quantity: string;
+  budget: string;
+  location: string;
+  timeline: string;
+  notes?: string | null;
+}
+
+export interface SupplierMatch {
+  id: string;
+  requirement_id: string;
+  offering_id: string;
+  score: number;
+  breakdown: MatchBreakdown;
+  explanation: string;
+  tags: string[];
+  status: "pending" | "contacted" | "confirmed";
+  created_at: string;
+  requirement: SupplierMatchRequirement;
+}
