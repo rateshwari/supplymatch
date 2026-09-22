@@ -8,44 +8,6 @@ The platform combines semantic similarity using sentence embeddings with procure
 
 ---
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Problem Statement](#problem-statement)
-- [Solution](#solution)
-- [Key Features](#key-features)
-- [User Roles](#user-roles)
-- [System Architecture](#system-architecture)
-- [Application Workflow](#application-workflow)
-- [AI Matching Engine](#ai-matching-engine)
-- [Matching Pipeline](#matching-pipeline)
-- [Explainable Matching](#explainable-matching)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Database Architecture](#database-architecture)
-- [Authentication and Authorization](#authentication-and-authorization)
-- [API Architecture](#api-architecture)
-- [Notifications and Match Requests](#notifications-and-match-requests)
-- [Synthetic Dataset](#synthetic-dataset)
-- [Evaluation Results](#evaluation-results)
-- [Performance and Scalability](#performance-and-scalability)
-- [Local Development](#local-development)
-- [Environment Variables](#environment-variables)
-- [Running the Backend](#running-the-backend)
-- [Running the Frontend](#running-the-frontend)
-- [Testing](#testing)
-- [CI/CD](#cicd)
-- [Deployment](#deployment)
-- [Security](#security)
-- [Application Routes](#application-routes)
-- [Current Scope](#current-scope)
-- [Future Enhancements](#future-enhancements)
-- [Project Status](#project-status)
-- [Repository](#repository)
-- [License](#license)
-
----
-
 # Overview
 
 SupplyMatch is designed to simplify B2B procurement by intelligently connecting buyers with suppliers.
