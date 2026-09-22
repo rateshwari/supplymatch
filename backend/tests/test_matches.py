@@ -224,8 +224,7 @@ def test_generate_requirement_matches_success():
             "breakdown": persisted_match["breakdown"],
             "explanation": persisted_match["explanation"],
             "tags": ["strong product similarity"],
-            "status": "pending",
-        },
+            },
         on_conflict="requirement_id,offering_id",
     )
 
@@ -348,7 +347,7 @@ def test_get_requirement_matches_success():
             "explanation": "Match based on strong product similarity.",
             "tags": ["strong product similarity"],
             "status": "pending",
-            "created_at": "2026-09-20T10:00:00+00:00",
+                "created_at": "2026-09-20T10:00:00+00:00",
         }
     ]
 
