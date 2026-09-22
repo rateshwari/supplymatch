@@ -13,7 +13,9 @@ from app.routers import (
     offerings,
     profile,
     requirements,
+    supplier_matches,
 )
+
 
 app = FastAPI(
     title="SupplyMatch API",
@@ -40,9 +42,10 @@ async def health_check():
     }
 
 
-app.include_router(auth_router)
-app.include_router(profile_router)
-app.include_router(requirements_router)
-app.include_router(offerings_router)
+app.include_router(auth.router)
+app.include_router(profile.router)
+app.include_router(requirements.router)
+app.include_router(offerings.router)
 app.include_router(matches.router)
 app.include_router(notifications.router)
+app.include_router(supplier_matches.router)
