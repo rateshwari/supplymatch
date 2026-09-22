@@ -13,6 +13,7 @@ import type {
   UpdateProfileRequest,
 } from "../types/api";
 
+
 export function createRequirement(
   payload: CreateRequirementRequest,
 ): Promise<Requirement> {
@@ -22,9 +23,13 @@ export function createRequirement(
   );
 }
 
+
 export function getRequirements(): Promise<Requirement[]> {
-  return api.get<Requirement[]>("/api/v1/requirements");
+  return api.get<Requirement[]>(
+    "/api/v1/requirements",
+  );
 }
+
 
 export function createOffering(
   payload: CreateOfferingRequest,
@@ -35,9 +40,13 @@ export function createOffering(
   );
 }
 
+
 export function getOfferings(): Promise<Offering[]> {
-  return api.get<Offering[]>("/api/v1/offerings");
+  return api.get<Offering[]>(
+    "/api/v1/offerings",
+  );
 }
+
 
 export function generateMatches(
   requirementId: string,
@@ -48,6 +57,7 @@ export function generateMatches(
   );
 }
 
+
 export function getRequirementMatches(
   requirementId: string,
 ): Promise<Match[]> {
@@ -56,9 +66,39 @@ export function getRequirementMatches(
   );
 }
 
-export function getNotifications(): Promise<Notification[]> {
-  return api.get<Notification[]>("/api/v1/notifications");
+
+/**
+ * Client sends a selected supplier match request.
+ */
+export function requestMatch(
+  matchId: string,
+): Promise<Match> {
+  return api.patch<Match>(
+    `/api/v1/requirements/match/${matchId}/request`,
+    {},
+  );
 }
+
+
+/**
+ * Supplier accepts a client match request.
+ */
+export function acceptMatch(
+  matchId: string,
+): Promise<Match> {
+  return api.patch<Match>(
+    `/api/v1/requirements/match/${matchId}/accept`,
+    {},
+  );
+}
+
+
+export function getNotifications(): Promise<Notification[]> {
+  return api.get<Notification[]>(
+    "/api/v1/notifications",
+  );
+}
+
 
 export function markNotificationAsRead(
   notificationId: string,
@@ -69,6 +109,7 @@ export function markNotificationAsRead(
   );
 }
 
+
 export function createProfile(
   payload: CreateProfileRequest,
 ): Promise<Profile> {
@@ -78,9 +119,13 @@ export function createProfile(
   );
 }
 
+
 export function getMyProfile(): Promise<Profile> {
-  return api.get<Profile>("/api/v1/profile/me");
+  return api.get<Profile>(
+    "/api/v1/profile/me",
+  );
 }
+
 
 export function updateMyProfile(
   payload: UpdateProfileRequest,
@@ -91,6 +136,9 @@ export function updateMyProfile(
   );
 }
 
+
 export function getSupplierMatches(): Promise<SupplierMatch[]> {
-  return api.get<SupplierMatch[]>("/api/v1/supplier/matches");
+  return api.get<SupplierMatch[]>(
+    "/api/v1/supplier/matches",
+  );
 }
