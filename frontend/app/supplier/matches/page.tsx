@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import AppShell from "@/components/app-shell";
 import { getSupplierMatches } from "@/lib/supplymatch-api";
 import type { SupplierMatch } from "@/types/api";
 
@@ -17,113 +18,187 @@ function ScoreBar({
   label: string;
   value: number;
 }) {
+  const percentage = Math.min(Math.max(value, 0), 100);
+
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-500">{label}</span>
-        <span className="font-medium text-slate-700">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-[#7c827b]">
+          {label}
+        </span>
+
+        <span className="font-mono text-[9px] font-semibold text-[#26312c]">
           {Math.round(value)}%
         </span>
       </div>
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-[3px] w-full bg-[#dfe2dc]">
         <div
-          className="h-full rounded-full bg-slate-900"
-          style={{ width: `${Math.min(value, 100)}%` }}
+          className="h-full bg-[#26312c] transition-all"
+          style={{ width: `${percentage}%` }}
         />
       </div>
     </div>
   );
 }
 
+function InfoItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="border-r border-[#d0d3cc] px-5 py-4 first:pl-0 last:border-r-0">
+      <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#858b84]">
+        {label}
+      </p>
+
+      <p className="mt-2 font-serif text-[15px] text-[#26312c]">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function RequirementCard({
   match,
+  index,
 }: {
   match: SupplierMatch;
+  index: number;
 }) {
   const { requirement } = match;
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex flex-col gap-5">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+    <article className="border border-[#aeb4ad] bg-[#f8f5ec]">
+      {/* CARD HEADER */}
+      <div className="flex flex-col gap-5 border-b border-[#d0d3cc] px-6 py-6 lg:flex-row lg:items-start lg:justify-between">
+
+        <div className="flex gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#aeb4ad] font-mono text-[9px] font-semibold text-[#536059]">
+            {String(index + 1).padStart(2, "0")}
+          </div>
+
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#7c827b]">
               Buyer requirement
             </p>
 
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
+            <h2 className="mt-2 font-serif text-[25px] leading-tight text-[#18221e]">
               {requirement.product}
             </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Buyer request matched to your offering
+            <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.12em] text-[#8a9089]">
+              Requirement ref // {match.requirement_id}
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize text-slate-600">
-              {match.status}
+        <div className="flex items-center gap-3 lg:pt-1">
+          <span className="border border-[#c0c5be] px-3 py-2 font-mono text-[8px] uppercase tracking-[0.14em] text-[#68716a]">
+            {match.status}
+          </span>
+
+          <div className="min-w-[105px] border border-[#26312c] bg-[#26312c] px-4 py-3 text-right text-[#f4f0e5]">
+            <p className="font-mono text-[7px] uppercase tracking-[0.16em] text-[#aeb9b1]">
+              Match score
+            </p>
+
+            <p className="mt-1 font-serif text-[24px] leading-none">
+              {formatScore(match.score)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* REQUIREMENT DETAILS */}
+      <div className="grid border-b border-[#d0d3cc] sm:grid-cols-2 lg:grid-cols-4">
+        <InfoItem
+          label="Quantity"
+          value={requirement.quantity}
+        />
+
+        <InfoItem
+          label="Budget"
+          value={requirement.budget}
+        />
+
+        <InfoItem
+          label="Location"
+          value={requirement.location}
+        />
+
+        <InfoItem
+          label="Timeline"
+          value={requirement.timeline}
+        />
+      </div>
+
+      {/* NOTES */}
+      {requirement.notes && (
+        <div className="border-b border-[#d0d3cc] px-6 py-5">
+          <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#858b84]">
+            Buyer notes
+          </p>
+
+          <p className="mt-2 max-w-4xl font-serif text-[14px] leading-6 text-[#59625c]">
+            {requirement.notes}
+          </p>
+        </div>
+      )}
+
+      {/* MATCH ANALYSIS */}
+      <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+
+        {/* EXPLANATION */}
+        <div className="border-b border-[#d0d3cc] px-6 py-6 lg:border-b-0 lg:border-r">
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.18em] text-[#69726b]">
+              Match analysis
+            </p>
+
+            <span className="font-mono text-[7px] uppercase tracking-[0.15em] text-[#90958f]">
+              Explainable result
             </span>
+          </div>
 
-            <div className="rounded-xl bg-slate-950 px-4 py-2 text-right text-white">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400">
-                Match
-              </p>
-              <p className="text-xl font-semibold">
-                {formatScore(match.score)}
-              </p>
+          <h3 className="mt-3 font-serif text-[20px] text-[#26312c]">
+            Why this matches
+          </h3>
+
+          <p className="mt-3 max-w-2xl font-serif text-[14px] leading-7 text-[#606861]">
+            {match.explanation}
+          </p>
+
+          {match.tags.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {match.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="border border-[#c5cac3] bg-[#eef0ea] px-3 py-1.5 font-mono text-[7px] uppercase tracking-[0.12em] text-[#5d6760]"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <InfoItem label="Quantity" value={requirement.quantity} />
-          <InfoItem label="Budget" value={requirement.budget} />
-          <InfoItem label="Location" value={requirement.location} />
-          <InfoItem label="Timeline" value={requirement.timeline} />
-        </div>
-
-        {requirement.notes && (
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Buyer notes
-            </p>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              {requirement.notes}
-            </p>
-          </div>
-        )}
-
-        <div className="grid gap-6 border-t border-slate-100 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Why this matches
-            </p>
-
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              {match.explanation}
-            </p>
-
-            {match.tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {match.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        {/* BREAKDOWN */}
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.18em] text-[#69726b]">
               Match breakdown
             </p>
 
+            <span className="font-mono text-[7px] uppercase tracking-[0.15em] text-[#90958f]">
+              Weighted score
+            </span>
+          </div>
+
+          <div className="mt-5 space-y-4">
             <ScoreBar
               label="Semantic similarity"
               value={match.breakdown.semantic_similarity * 100}
@@ -156,22 +231,18 @@ function RequirementCard({
           </div>
         </div>
       </div>
-    </article>
-  );
-}
 
-function InfoItem({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-medium text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
-    </div>
+      {/* FOOTER */}
+      <div className="flex flex-col gap-2 border-t border-[#d0d3cc] bg-[#eef0ea] px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="font-mono text-[7px] uppercase tracking-[0.15em] text-[#858b84]">
+          SupplyMatch / Matching Engine
+        </span>
+
+        <span className="font-mono text-[7px] uppercase tracking-[0.15em] text-[#858b84]">
+          Match record // {match.id}
+        </span>
+      </div>
+    </article>
   );
 }
 
@@ -220,88 +291,170 @@ export default function SupplierMatchesPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8">
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard")}
-          className="mb-8 text-sm font-medium text-slate-500 transition hover:text-slate-950"
-        >
-          ← Back to dashboard
-        </button>
+    <AppShell title="Matched Requirements">
+      <main className="min-h-[calc(100vh-78px)] bg-[#f4f0e5] px-6 py-8 lg:px-10 lg:py-10">
 
-        <header className="mb-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            Supplier workspace
-          </p>
+        <div className="mx-auto max-w-[1400px]">
 
-          <div className="mt-3 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-                Matched requirements
-              </h1>
+          {/* PAGE HEADER */}
+          <section className="border-b-2 border-[#26312c] pb-7">
+            <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Buyer requirements that SupplyMatch has identified as relevant
-                to your offerings.
-              </p>
-            </div>
+              <div>
+                <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.2em] text-[#7b827b]">
+                  02 // Matching Registry
+                </p>
 
-            {!loading && (
-              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                <p className="text-xs text-slate-400">Active matches</p>
-                <p className="mt-1 text-xl font-semibold text-slate-950">
-                  {matches.length}
+                <h1 className="mt-3 font-serif text-[42px] leading-none tracking-[-0.025em] text-[#18221e] lg:text-[50px]">
+                  Matched requirements
+                </h1>
+
+                <p className="mt-4 max-w-2xl font-serif text-[15px] leading-7 text-[#68716a]">
+                  Buyer requirements identified by the SupplyMatch engine as
+                  relevant to your supplier offerings.
                 </p>
               </div>
-            )}
-          </div>
-        </header>
 
-        {loading && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-            <p className="text-sm text-slate-500">
-              Loading matched requirements...
+              {!loading && !error && (
+                <div className="flex shrink-0 items-stretch">
+                  <div className="border border-[#aeb4ad] px-5 py-4">
+                    <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#858b84]">
+                      Active matches
+                    </p>
+
+                    <p className="mt-2 font-serif text-[27px] leading-none text-[#26312c]">
+                      {matches.length}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => router.push("/offerings/new")}
+                    className="bg-[#bd4f2d] px-6 py-4 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#fffaf0] transition hover:bg-[#a94426]"
+                  >
+                    Add offering →
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* REGISTRY META */}
+          <div className="flex flex-col justify-between gap-3 border-b border-[#c5cac3] py-4 sm:flex-row">
+            <p className="font-mono text-[8px] uppercase tracking-[0.17em] text-[#858b84]">
+              SupplyMatch / Supplier Match Registry
+            </p>
+
+            <p className="font-mono text-[8px] uppercase tracking-[0.17em] text-[#858b84]">
+              Registry status:{" "}
+              <span className="text-[#26312c]">Authenticated</span>
             </p>
           </div>
-        )}
 
-        {!loading && error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
-            <p className="text-sm font-medium text-red-700">{error}</p>
-          </div>
-        )}
+          {/* LOADING */}
+          {loading && (
+            <section className="mt-8 border border-[#aeb4ad] bg-[#f8f5ec] px-8 py-14 text-center">
+              <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[#69726b]">
+                Loading matching registry...
+              </p>
+            </section>
+          )}
 
-        {!loading && !error && matches.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <h2 className="text-lg font-semibold text-slate-900">
-              No matched requirements yet
-            </h2>
+          {/* ERROR */}
+          {!loading && error && (
+            <section className="mt-8 border border-[#bd4f2d] bg-[#f8eee8] px-6 py-6">
+              <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.17em] text-[#9d4127]">
+                Matching engine error
+              </p>
 
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-              Add an offering that matches what buyers are looking for. New
-              relevant requirements will appear here when matches are
-              generated.
-            </p>
+              <p className="mt-2 font-serif text-[15px] leading-6 text-[#733522]">
+                {error}
+              </p>
+            </section>
+          )}
 
-            <button
-              type="button"
-              onClick={() => router.push("/offerings/new")}
-              className="mt-6 rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Add an offering
-            </button>
-          </div>
-        )}
+          {/* EMPTY STATE */}
+          {!loading && !error && matches.length === 0 && (
+            <section className="mt-8 border border-[#aeb4ad] bg-[#f8f5ec]">
 
-        {!loading && !error && matches.length > 0 && (
-          <div className="space-y-5">
-            {matches.map((match) => (
-              <RequirementCard key={match.id} match={match} />
-            ))}
-          </div>
-        )}
-      </div>
-    </main>
+              <div className="border-b border-[#d0d3cc] px-6 py-5">
+                <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#7c827b]">
+                  Matching registry
+                </p>
+
+                <h2 className="mt-2 font-serif text-[23px] text-[#26312c]">
+                  No matched requirements
+                </h2>
+              </div>
+
+              <div className="px-6 py-12 text-center">
+                <p className="font-serif text-[16px] text-[#59625c]">
+                  Your supplier offerings have not generated any buyer matches
+                  yet.
+                </p>
+
+                <p className="mx-auto mt-3 max-w-lg font-serif text-[14px] leading-6 text-[#858b84]">
+                  Add an offering to give the matching engine more supplier
+                  inventory to compare against active buyer requirements.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/offerings/new")}
+                  className="mt-7 bg-[#26312c] px-6 py-3 font-mono text-[8px] font-bold uppercase tracking-[0.17em] text-[#f4f0e5] transition hover:bg-[#18221e]"
+                >
+                  Add an offering →
+                </button>
+              </div>
+            </section>
+          )}
+
+          {/* MATCH LIST */}
+          {!loading && !error && matches.length > 0 && (
+            <section className="mt-8">
+
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#7c827b]">
+                    Active sourcing records
+                  </p>
+
+                  <h2 className="mt-2 font-serif text-[25px] text-[#26312c]">
+                    Requirement matches
+                  </h2>
+                </div>
+
+                <p className="font-mono text-[8px] uppercase tracking-[0.15em] text-[#858b84]">
+                  {matches.length} records
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {matches.map((match, index) => (
+                  <RequirementCard
+                    key={match.id}
+                    match={match}
+                    index={index}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* FOOTER */}
+          <footer className="mt-10 border-t-2 border-[#26312c] py-5">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row">
+              <p className="font-mono text-[7px] uppercase tracking-[0.16em] text-[#858b84]">
+                Archive ref // SupplyMatch / Matching Registry
+              </p>
+
+              <p className="font-mono text-[7px] uppercase tracking-[0.16em] text-[#858b84]">
+                Matching records // Authenticated session
+              </p>
+            </div>
+          </footer>
+        </div>
+      </main>
+    </AppShell>
   );
 }

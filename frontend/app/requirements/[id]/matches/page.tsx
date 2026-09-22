@@ -1,15 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
+import AppShell from "@/components/app-shell";
 
 import {
   generateMatches,
   getRequirementMatches,
   getRequirements,
-} from "../../../../lib/supplymatch-api";
-import { supabase } from "../../../../lib/supabase";
-import type { Match, Requirement } from "../../../../types/api";
+} from "@/lib/supplymatch-api";
+
+import { supabase } from "@/lib/supabase";
+
+import type { Match, Requirement } from "@/types/api";
 
 type MatchesPageProps = {
   params: Promise<{
@@ -45,12 +49,12 @@ export default function MatchesPage({ params }: MatchesPageProps) {
         return;
       }
 
-      const resolvedParams = await params;
-      const id = resolvedParams.id;
-
-      setRequirementId(id);
-
       try {
+        const resolvedParams = await params;
+        const id = resolvedParams.id;
+
+        setRequirementId(id);
+
         const [requirements, existingMatches] = await Promise.all([
           getRequirements(),
           getRequirementMatches(id),
@@ -92,6 +96,7 @@ export default function MatchesPage({ params }: MatchesPageProps) {
 
     try {
       const generatedMatches = await generateMatches(requirementId);
+
       setMatches(generatedMatches);
 
       setMessage(
@@ -112,164 +117,279 @@ export default function MatchesPage({ params }: MatchesPageProps) {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <p className="text-sm text-slate-600">
-            Loading supplier matches...
-          </p>
+      <AppShell title="Matching Engine">
+        <div className="flex min-h-[calc(100vh-78px)] items-center justify-center bg-[#f4f0e5]">
+          <div className="text-center">
+            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#7b857e]">
+              SupplyMatch // Matching Engine
+            </p>
+
+            <p className="mt-4 font-serif text-2xl text-[#1d2823]">
+              Loading supplier matches...
+            </p>
+          </div>
         </div>
-      </main>
+      </AppShell>
     );
   }
 
   if (error && !requirement) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-            <h1 className="text-lg font-semibold text-red-900">
+      <AppShell title="Matching Engine">
+        <div className="bg-[#f4f0e5] px-8 py-12 lg:px-12">
+          <div className="mx-auto max-w-[1200px] border border-[#b9c0b9] bg-[#f7f3e9] p-8">
+            <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#b94a2d]">
+              ERROR // MATCHING ENGINE
+            </p>
+
+            <h1 className="mt-4 font-serif text-4xl text-[#1d2823]">
               Unable to load matches
             </h1>
 
-            <p className="mt-2 text-sm text-red-700">{error}</p>
+            <p className="mt-4 text-sm leading-7 text-[#68716b]">
+              {error}
+            </p>
 
             <Link
               href="/requirements"
-              className="mt-4 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+              className="mt-7 inline-flex bg-[#c65332] px-6 py-3 font-mono text-[9px] font-semibold uppercase tracking-[0.17em] text-white transition hover:bg-[#ad4328]"
             >
               Back to Requirements
             </Link>
           </div>
         </div>
-      </main>
+      </AppShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-sm font-semibold text-blue-600">
-              SupplyMatch
-            </p>
-
-            <h1 className="text-xl font-bold text-slate-900">
-              AI Supplier Matches
-            </h1>
-          </div>
-
-          <Link
-            href="/requirements"
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            My Requirements
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        {requirement && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <AppShell title="Matching Engine">
+      <div className="bg-[#f4f0e5] px-6 py-10 lg:px-10 xl:px-12">
+        <div className="mx-auto max-w-[1320px]">
+          {/* PAGE HEADER */}
+          <section className="border-b-2 border-[#27332d] pb-7">
+            <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold text-blue-600">
-                  Your requirement
+                <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-[#758079]">
+                  02 // MATCHING REGISTRY
                 </p>
 
-                <h2 className="mt-2 text-3xl font-bold text-slate-900">
-                  {requirement.product}
-                </h2>
+                <h1 className="mt-3 font-serif text-[46px] leading-none tracking-[-0.035em] text-[#1c2722] md:text-[58px]">
+                  Supplier matches
+                </h1>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <RequirementBadge>
-                    {requirement.quantity}
-                  </RequirementBadge>
+                <p className="mt-4 max-w-2xl font-serif text-[17px] leading-7 text-[#707871]">
+                  Review suppliers ranked by the SupplyMatch semantic and
+                  structured matching engine.
+                </p>
+              </div>
 
-                  <RequirementBadge>
-                    {requirement.location}
-                  </RequirementBadge>
+              <div className="flex shrink-0 items-center gap-3">
+                <Link
+                  href="/requirements"
+                  className="border border-[#aeb7af] px-5 py-3 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-[#38453e] transition hover:bg-[#e9ede7]"
+                >
+                  My Requirements
+                </Link>
 
-                  <RequirementBadge>
-                    Delivery: {requirement.timeline}
-                  </RequirementBadge>
+                <button
+                  type="button"
+                  onClick={handleGenerateMatches}
+                  disabled={generating}
+                  className="bg-[#c65332] px-6 py-3 font-mono text-[9px] font-semibold uppercase tracking-[0.17em] text-white transition hover:bg-[#ad4328] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {generating ? "Matching..." : "Run Matching Engine →"}
+                </button>
+              </div>
+            </div>
+          </section>
 
-                  <RequirementBadge>
-                    Budget: {requirement.budget}
-                  </RequirementBadge>
+          {/* REQUIREMENT RECORD */}
+          {requirement && (
+            <section className="mt-7 border border-[#b8c0b9] bg-[#f7f3e9]">
+              <div className="border-b border-[#cbd0c9] px-6 py-5 lg:px-7">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#7a847d]">
+                      Requirement Record
+                    </p>
+
+                    <h2 className="mt-2 font-serif text-3xl tracking-[-0.02em] text-[#1d2823]">
+                      {requirement.product}
+                    </h2>
+
+                    <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.12em] text-[#8a928c]">
+                      REF // {requirement.id}
+                    </p>
+                  </div>
+
+                  <div className="border border-[#bfc7c0] bg-[#edf0eb] px-4 py-3">
+                    <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-[#7b857e]">
+                      MATCHING STATUS
+                    </p>
+
+                    <p className="mt-1 font-serif text-base text-[#26332c]">
+                      {matches.length > 0
+                        ? `${matches.length} matches generated`
+                        : "No matches generated"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleGenerateMatches}
-                disabled={generating}
-                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {generating
-                  ? "Finding Suppliers..."
-                  : "Generate AI Matches"}
-              </button>
+              <div className="grid border-b border-[#cbd0c9] sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+                <RequirementDetail
+                  label="Quantity"
+                  value={requirement.quantity}
+                />
+
+                <RequirementDetail
+                  label="Budget"
+                  value={requirement.budget}
+                />
+
+                <RequirementDetail
+                  label="Location"
+                  value={requirement.location}
+                />
+
+                <RequirementDetail
+                  label="Timeline"
+                  value={requirement.timeline}
+                />
+
+                <RequirementDetail
+                  label="Category"
+                  value={String(requirement.category_id)}
+                />
+              </div>
+
+              {requirement.notes && (
+                <div className="px-6 py-5 lg:px-7">
+                  <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#7b857e]">
+                    Requirement Notes
+                  </p>
+
+                  <p className="mt-2 max-w-4xl font-serif text-[15px] leading-7 text-[#657069]">
+                    {requirement.notes}
+                  </p>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* FEEDBACK */}
+          {error && (
+            <div className="mt-5 border border-[#c96b53] bg-[#f6e9e3] px-5 py-4">
+              <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#a63e27]">
+                {error}
+              </p>
             </div>
-          </section>
-        )}
+          )}
 
-        {error && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        )}
+          {message && (
+            <div className="mt-5 border border-[#b7c2b8] bg-[#e9eee8] px-5 py-4">
+              <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#52645a]">
+                {message}
+              </p>
+            </div>
+          )}
 
-        {message && (
-          <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
-            <p className="text-sm text-green-700">{message}</p>
-          </div>
-        )}
-
-        {matches.length === 0 && !error && (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-            <h3 className="text-lg font-semibold text-slate-900">
-              No matches yet
-            </h3>
-
-            <p className="mt-2 text-sm text-slate-600">
-              Generate AI matches to find suppliers for this requirement.
-            </p>
-          </div>
-        )}
-
-        {matches.length > 0 && (
-          <div className="mt-8">
-            <div className="mb-5 flex items-end justify-between">
+          {/* MATCHES */}
+          <section className="mt-10">
+            <div className="flex items-end justify-between border-b border-[#aeb6af] pb-4">
               <div>
-                <p className="text-sm font-semibold text-blue-600">
-                  AI-ranked suppliers
+                <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-[#7a847d]">
+                  Ranked Supplier Results
                 </p>
 
-                <h2 className="mt-1 text-2xl font-bold text-slate-900">
-                  Recommended matches
+                <h2 className="mt-2 font-serif text-3xl text-[#1d2823]">
+                  Matching suppliers
                 </h2>
               </div>
 
-              <p className="text-sm text-slate-500">
+              <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-[#7d867f]">
                 {matches.length}{" "}
-                {matches.length === 1 ? "supplier" : "suppliers"} found
+                {matches.length === 1 ? "RECORD" : "RECORDS"}
               </p>
             </div>
 
-            <div className="space-y-5">
-              {matches.map((match, index) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  index={index}
-                />
-              ))}
+            {matches.length === 0 && !error && (
+              <div className="mt-5 border border-dashed border-[#b9c1ba] bg-[#f7f3e9] px-8 py-16 text-center">
+                <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#7a847d]">
+                  MATCHING ENGINE // IDLE
+                </p>
+
+                <h3 className="mt-4 font-serif text-2xl text-[#1d2823]">
+                  No matches generated yet
+                </h3>
+
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#747d76]">
+                  Run the matching engine to identify suppliers that align
+                  with this requirement.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateMatches}
+                  disabled={generating}
+                  className="mt-6 bg-[#17231d] px-6 py-3 font-mono text-[9px] font-semibold uppercase tracking-[0.17em] text-[#f4f0e5] transition hover:bg-[#27352e] disabled:opacity-60"
+                >
+                  {generating
+                    ? "Finding Suppliers..."
+                    : "Find Suppliers →"}
+                </button>
+              </div>
+            )}
+
+            {matches.length > 0 && (
+              <div className="mt-5 space-y-5">
+                {matches.map((match, index) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    index={index}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* FOOTER */}
+          <footer className="mt-12 border-t-2 border-[#27332d] py-6">
+            <div className="flex flex-col gap-3 font-mono text-[8px] uppercase tracking-[0.15em] text-[#858e87] sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                ARCHIVE REF // SUPPLYMATCH / MATCHING ENGINE
+              </span>
+
+              <span>
+                AUTHENTICATED SESSION // SEMANTIC + STRUCTURED MATCHING
+              </span>
             </div>
-          </div>
-        )}
+          </footer>
+        </div>
       </div>
-    </main>
+    </AppShell>
+  );
+}
+
+function RequirementDetail({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="border-r border-[#cbd0c9] px-5 py-5 last:border-r-0">
+      <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#858e87]">
+        {label}
+      </p>
+
+      <p className="mt-2 font-serif text-[16px] text-[#26332c]">
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -281,107 +401,115 @@ function MatchCard({
   index: number;
 }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md">
-      <div className="p-6">
+    <article className="border border-[#b7c0b8] bg-[#f7f3e9]">
+      {/* MATCH HEADER */}
+      <div className="border-b border-[#cbd0c9] px-6 py-6 lg:px-7">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                Match #{index + 1}
-              </span>
-
-              <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold capitalize text-green-700">
-                {match.status}
-              </span>
+          <div className="flex min-w-0 gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#aeb8b0] font-mono text-[10px] font-semibold text-[#546159]">
+              {String(index + 1).padStart(2, "0")}
             </div>
 
-            <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Supplier
+            <div>
+              <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#7c867f]">
+                SUPPLIER MATCH
               </p>
 
-              <h3 className="mt-1 text-2xl font-bold text-slate-900">
+              <h3 className="mt-1 font-serif text-2xl tracking-[-0.02em] text-[#1d2823]">
                 {match.supplier.name}
               </h3>
 
               {match.supplier.company && (
-                <p className="mt-1 text-sm font-medium text-slate-500">
+                <p className="mt-1 text-sm text-[#747d76]">
                   {match.supplier.company}
                 </p>
               )}
             </div>
+          </div>
 
-            <div className="mt-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Offering
+          <div className="flex items-center gap-4">
+            <span className="border border-[#b8c1b9] bg-[#e9eee8] px-3 py-2 font-mono text-[8px] font-semibold uppercase tracking-[0.14em] text-[#526259]">
+              {match.status}
+            </span>
+
+            <div className="border border-[#25322c] bg-[#1b2721] px-5 py-3 text-center">
+              <p className="font-mono text-[7px] uppercase tracking-[0.18em] text-[#aeb8b0]">
+                MATCH SCORE
               </p>
 
-              <h4 className="mt-1 text-lg font-semibold text-slate-900">
-                {match.offering.product}
-              </h4>
-
-              {match.offering.notes && (
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                  {match.offering.notes}
-                </p>
-              )}
+              <p className="mt-1 font-serif text-3xl text-[#f4f0e5]">
+                {matchScorePercentage(match.score)}
+              </p>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="shrink-0 rounded-2xl border border-blue-100 bg-blue-50 px-7 py-5 text-center lg:min-w-36">
-            <p className="text-xs font-bold uppercase tracking-wide text-blue-600">
-              Match Score
-            </p>
+      {/* OFFERING */}
+      <div className="grid lg:grid-cols-[1.4fr_1fr]">
+        <div className="border-b border-[#cbd0c9] px-6 py-6 lg:border-b-0 lg:border-r lg:px-7">
+          <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#7b857e]">
+            Supplier Offering
+          </p>
 
-            <p className="mt-1 text-4xl font-bold tracking-tight text-blue-700">
-              {matchScorePercentage(match.score)}
-            </p>
+          <h4 className="mt-2 font-serif text-xl text-[#27342d]">
+            {match.offering.product}
+          </h4>
 
-            <p className="mt-1 text-xs text-blue-600">
-              AI compatibility
+          {match.offering.notes && (
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#6d766f]">
+              {match.offering.notes}
             </p>
+          )}
+
+          <div className="mt-6 grid grid-cols-2 gap-px border border-[#cbd0c9] bg-[#cbd0c9] md:grid-cols-4">
+            <OfferingDetail
+              label="Price"
+              value={match.offering.price}
+            />
+
+            <OfferingDetail
+              label="Quantity"
+              value={match.offering.quantity}
+            />
+
+            <OfferingDetail
+              label="Location"
+              value={match.offering.location}
+            />
+
+            <OfferingDetail
+              label="Delivery"
+              value={match.offering.delivery}
+            />
           </div>
         </div>
 
-        <div className="mt-7 grid gap-3 border-y border-slate-100 py-5 sm:grid-cols-2 lg:grid-cols-4">
-          <OfferingDetail
-            label="Price"
-            value={match.offering.price}
-          />
+        {/* EXPLANATION */}
+        <div className="bg-[#edf0eb] px-6 py-6 lg:px-7">
+          <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-[#718078]">
+            Match Explanation
+          </p>
 
-          <OfferingDetail
-            label="Quantity"
-            value={match.offering.quantity}
-          />
-
-          <OfferingDetail
-            label="Location"
-            value={match.offering.location}
-          />
-
-          <OfferingDetail
-            label="Delivery"
-            value={match.offering.delivery}
-          />
-        </div>
-
-        <div className="mt-6">
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-slate-100" />
-
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-              Why this supplier matched
-            </p>
-
-            <div className="h-px flex-1 bg-slate-100" />
-          </div>
-
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-3 font-serif text-[15px] leading-7 text-[#536159]">
             {match.explanation}
           </p>
         </div>
+      </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* BREAKDOWN */}
+      <div className="border-t border-[#cbd0c9] px-6 py-6 lg:px-7">
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.18em] text-[#78827b]">
+            Matching Breakdown
+          </p>
+
+          <span className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#909790]">
+            SEMANTIC + STRUCTURED
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Score
             label="Semantic Similarity"
             value={match.breakdown.semantic_similarity}
@@ -418,7 +546,7 @@ function MatchCard({
             {match.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600"
+                className="border border-[#bdc5be] bg-[#edf0eb] px-3 py-2 font-mono text-[8px] uppercase tracking-[0.12em] text-[#68736c]"
               >
                 {tag}
               </span>
@@ -430,14 +558,6 @@ function MatchCard({
   );
 }
 
-function RequirementBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-      {children}
-    </span>
-  );
-}
-
 function OfferingDetail({
   label,
   value,
@@ -446,12 +566,12 @@ function OfferingDetail({
   value: string;
 }) {
   return (
-    <div className="rounded-xl bg-slate-50 px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="bg-[#f4f0e5] px-4 py-4">
+      <p className="font-mono text-[7px] uppercase tracking-[0.17em] text-[#858e87]">
         {label}
       </p>
 
-      <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+      <p className="mt-1 truncate font-serif text-[14px] text-[#2d3932]">
         {value}
       </p>
     </div>
@@ -465,21 +585,26 @@ function Score({
   label: string;
   value: number;
 }) {
-  return (
-    <div className="rounded-xl border border-slate-200 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-600">{label}</p>
+  const percentage = Math.min(
+    Math.max(value * 100, 0),
+    100,
+  );
 
-        <p className="text-sm font-bold text-slate-900">
+  return (
+    <div className="border border-[#c4ccc5] bg-[#f7f3e9] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-[#5d6861]">{label}</p>
+
+        <p className="font-mono text-[10px] font-semibold text-[#29362f]">
           {componentPercentage(value)}
         </p>
       </div>
 
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+      <div className="mt-3 h-[3px] bg-[#dce1db]">
         <div
-          className="h-full rounded-full bg-blue-600"
+          className="h-full bg-[#c65332]"
           style={{
-            width: `${Math.min(Math.max(value * 100, 0), 100)}%`,
+            width: `${percentage}%`,
           }}
         />
       </div>
