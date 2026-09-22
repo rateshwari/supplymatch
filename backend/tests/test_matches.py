@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from app.auth import get_current_user, require_client_user
+from app.auth import require_client_user
 from app.deps import get_supabase_client
 from app.main import app
 
@@ -24,13 +24,58 @@ def build_client_profile_table():
     ) = MagicMock(
         data=[{"role": "client"}]
     )
+
+    return profiles_table
+
+
+def build_offering_table():
+    offerings_table = MagicMock()
+
+    (
+        offerings_table.select.return_value
+        .eq.return_value
+        .execute.return_value
+    ) = MagicMock(
+        data=[
+            {
+                "product": "Business laptops",
+                "quantity": "150",
+                "price": "₹450000",
+                "location": "Mumbai",
+                "delivery": "7 days",
+                "notes": "Dell and HP laptops",
+                "user_id": "supplier-1",
+            }
+        ]
+    )
+
+    return offerings_table
+
+
+def build_supplier_profile_table():
+    profiles_table = MagicMock()
+
+    (
+        profiles_table.select.return_value
+        .eq.return_value
+        .execute.return_value
+    ) = MagicMock(
+        data=[
+            {
+                "name": "Supplier One",
+                "company": "ABC Supplies",
+            }
+        ]
+    )
+
     return profiles_table
 
 
 def test_generate_requirement_matches_success():
     supabase = MagicMock()
 
-    profiles_table = build_client_profile_table()
+    profiles_table = build_supplier_profile_table()
+    offerings_table = build_offering_table()
 
     requirements_table = MagicMock()
     (
@@ -55,22 +100,22 @@ def test_generate_requirement_matches_success():
 
     (
         notifications_table.insert.return_value
-    .select.return_value
-    .execute.return_value
-) = MagicMock(
-    data=[
-        {
-            "id": "notification-1",
-            "user_id": "supplier-1",
-            "match_id": "match-1",
-            "message": (
-                "New requirement match for Business laptops "
-                "with a match score of 97%."
-            ),
-            "read": False,
-            "created_at": "2026-09-20T10:00:00+00:00",
-        }
-    ]
+        .select.return_value
+        .execute.return_value
+    ) = MagicMock(
+        data=[
+            {
+                "id": "notification-1",
+                "user_id": "supplier-1",
+                "match_id": "match-1",
+                "message": (
+                    "New requirement match for Business laptops "
+                    "with a match score of 97%."
+                ),
+                "read": False,
+                "created_at": "2026-09-20T10:00:00+00:00",
+            }
+        ]
     )
 
     persisted_match = {
@@ -110,6 +155,9 @@ def test_generate_requirement_matches_success():
             return matches_table
         if name == "notifications":
             return notifications_table
+        if name == "offerings":
+            return offerings_table
+
         raise AssertionError(f"Unexpected table: {name}")
 
     supabase.table.side_effect = table
@@ -136,6 +184,24 @@ def test_generate_requirement_matches_success():
         }
     ]
 
+    expected_response = [
+        {
+            **persisted_match,
+            "supplier": {
+                "name": "Supplier One",
+                "company": "ABC Supplies",
+            },
+            "offering": {
+                "product": "Business laptops",
+                "quantity": "150",
+                "price": "₹450000",
+                "location": "Mumbai",
+                "delivery": "7 days",
+                "notes": "Dell and HP laptops",
+            },
+        }
+    ]
+
     try:
         with patch(
             "app.routers.matches.find_requirement_matches",
@@ -148,7 +214,7 @@ def test_generate_requirement_matches_success():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json() == [persisted_match]
+    assert response.json() == expected_response
 
     matches_table.upsert.assert_called_once_with(
         {
@@ -184,6 +250,7 @@ def test_generate_requirement_matches_rejects_unknown_requirement():
             return profiles_table
         if name == "requirements":
             return requirements_table
+
         raise AssertionError(f"Unexpected table: {name}")
 
     supabase.table.side_effect = table
@@ -212,7 +279,6 @@ def test_generate_requirement_matches_returns_empty_list():
         requirements_table.select.return_value
         .eq.return_value
         .eq.return_value
-   
         .execute.return_value
     ) = MagicMock(
         data=[{"id": "req-1"}]
@@ -223,6 +289,7 @@ def test_generate_requirement_matches_returns_empty_list():
             return profiles_table
         if name == "requirements":
             return requirements_table
+
         raise AssertionError(f"Unexpected table: {name}")
 
     supabase.table.side_effect = table
@@ -248,7 +315,8 @@ def test_generate_requirement_matches_returns_empty_list():
 def test_get_requirement_matches_success():
     supabase = MagicMock()
 
-    profiles_table = build_client_profile_table()
+    profiles_table = build_supplier_profile_table()
+    offerings_table = build_offering_table()
 
     requirements_table = MagicMock()
     (
@@ -300,13 +368,33 @@ def test_get_requirement_matches_success():
             return requirements_table
         if name == "matches":
             return matches_table
+        if name == "offerings":
+            return offerings_table
+
         raise AssertionError(f"Unexpected table: {name}")
 
     supabase.table.side_effect = table
 
-
     app.dependency_overrides[require_client_user] = override_current_user
     app.dependency_overrides[get_supabase_client] = lambda: supabase
+
+    expected_response = [
+        {
+            **persisted_matches[0],
+            "supplier": {
+                "name": "Supplier One",
+                "company": "ABC Supplies",
+            },
+            "offering": {
+                "product": "Business laptops",
+                "quantity": "150",
+                "price": "₹450000",
+                "location": "Mumbai",
+                "delivery": "7 days",
+                "notes": "Dell and HP laptops",
+            },
+        }
+    ]
 
     try:
         response = client.get(
@@ -316,7 +404,7 @@ def test_get_requirement_matches_success():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert response.json() == persisted_matches
+    assert response.json() == expected_response
 
 
 def test_get_requirement_matches_rejects_unknown_requirement():
@@ -339,6 +427,7 @@ def test_get_requirement_matches_rejects_unknown_requirement():
             return profiles_table
         if name == "requirements":
             return requirements_table
+
         raise AssertionError(f"Unexpected table: {name}")
 
     supabase.table.side_effect = table

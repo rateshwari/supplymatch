@@ -33,6 +33,67 @@ def verify_requirement_ownership(
         )
 
 
+def enrich_match(
+    supabase: Client,
+    match: dict,
+) -> dict:
+    offering_response = (
+        supabase.table("offerings")
+        .select(
+            "product, quantity, price, location, delivery, notes, user_id"
+        )
+        .eq("id", match["offering_id"])
+        .execute()
+    )
+
+    if not offering_response or not offering_response.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Offering not found",
+        )
+
+    offering = offering_response.data[0]
+
+    profile_response = (
+        supabase.table("profiles")
+        .select("name, company")
+        .eq("id", offering["user_id"])
+        .execute()
+    )
+
+    if not profile_response or not profile_response.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Supplier profile not found",
+        )
+
+    profile = profile_response.data[0]
+
+    return {
+        "id": match["id"],
+        "requirement_id": match["requirement_id"],
+        "offering_id": match["offering_id"],
+        "score": match["score"],
+        "breakdown": match["breakdown"],
+        "explanation": match["explanation"],
+        "tags": match["tags"],
+        "status": match["status"],
+        "created_at": match["created_at"],
+        "supplier": {
+            "name": profile["name"],
+            "company": profile.get("company"),
+        },
+        "offering": {
+            "product": offering["product"],
+            "quantity": offering["quantity"],
+            "price": offering["price"],
+            "location": offering["location"],
+            "delivery": offering["delivery"],
+            "notes": offering.get("notes"),
+        },
+    }
+
+
 @router.post(
     "/{requirement_id}/matches",
     response_model=list[MatchResponse],
@@ -72,35 +133,39 @@ def generate_requirement_matches(
         }
 
         response = (
-        supabase.table("matches")
-        .upsert(
-            payload,
-            on_conflict="requirement_id,offering_id",
-        )
-        .select(
-            "id, requirement_id, offering_id, score, "
-            "breakdown, explanation, tags, status, created_at"
-        )
-        .execute()
-    )
-
-    if not response or not response.data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to save match",
+            supabase.table("matches")
+            .upsert(
+                payload,
+                on_conflict="requirement_id,offering_id",
+            )
+            .select(
+                "id, requirement_id, offering_id, score, "
+                "breakdown, explanation, tags, status, created_at"
+            )
+            .execute()
         )
 
-    saved_match = response.data[0]
+        if not response or not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to save match",
+            )
 
-    persisted_matches.append(saved_match)
+        saved_match = response.data[0]
+        enriched_match = enrich_match(
+            supabase,
+            saved_match,
+        )
 
-    create_match_notification(
-        supabase,
-        supplier_user_id=match["supplier_user_id"],
-        match_id=saved_match["id"],
-        requirement_product=match["product"],
-        score=match["score"],
-)
+        persisted_matches.append(enriched_match)
+
+        create_match_notification(
+            supabase,
+            supplier_user_id=match["supplier_user_id"],
+            match_id=saved_match["id"],
+            requirement_product=match["product"],
+            score=match["score"],
+        )
 
     return persisted_matches
 
@@ -133,4 +198,10 @@ def get_requirement_matches(
         .execute()
     )
 
-    return response.data or []
+    if not response or not response.data:
+        return []
+
+    return [
+        enrich_match(supabase, match)
+        for match in response.data
+    ]
