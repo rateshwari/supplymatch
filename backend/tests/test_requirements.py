@@ -516,3 +516,55 @@ def test_supplier_cannot_list_requirements():
     assert response.json()["detail"] == (
         "Only client accounts can create requirements"
     )
+
+def test_create_requirement_rejects_unknown_fields():
+    app.dependency_overrides[
+        require_client_user
+    ] = override_auth
+    app.dependency_overrides[
+        get_supabase_client
+    ] = override_supabase
+
+    try:
+        response = client.post(
+            "/api/v1/requirements",
+            json={
+                "product": "100 laptops",
+                "category_id": 1,
+                "quantity": "100",
+                "budget": "₹500000",
+                "location": "Mumbai",
+                "timeline": "30 days",
+                "user_id": "attacker-user",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 422
+
+
+def test_create_requirement_rejects_oversized_product():
+    app.dependency_overrides[
+        require_client_user
+    ] = override_auth
+    app.dependency_overrides[
+        get_supabase_client
+    ] = override_supabase
+
+    try:
+        response = client.post(
+            "/api/v1/requirements",
+            json={
+                "product": "A" * 1001,
+                "category_id": 1,
+                "quantity": "100",
+                "budget": "₹500000",
+                "location": "Mumbai",
+                "timeline": "30 days",
+            },
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 422
