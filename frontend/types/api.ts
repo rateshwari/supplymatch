@@ -8,6 +8,20 @@ export interface MatchBreakdown {
   final_score: number;
 }
 
+export interface MatchSupplier {
+  name: string;
+  company?: string | null;
+}
+
+export interface MatchOffering {
+  product: string;
+  quantity: string;
+  price: string;
+  location: string;
+  delivery: string;
+  notes?: string | null;
+}
+
 export interface Match {
   id: string;
   requirement_id: string;
@@ -18,6 +32,9 @@ export interface Match {
   tags: string[];
   status: "pending" | "contacted" | "confirmed";
   created_at: string;
+
+  supplier: MatchSupplier;
+  offering: MatchOffering;
 }
 
 export interface Notification {
